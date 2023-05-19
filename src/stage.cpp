@@ -166,8 +166,15 @@ static void initTiles(void)
 
 static void initBoard(void)
 {
-	spawnBoardPiece(100, 100);
-	spawnBoardPiece(200, 100);
+	int i, j;
+
+	for (i = 0 ; i<11 ; i += 1)
+	{
+		for (j = 0 ; j<6 ; j += 1)
+		{
+			spawnBoardPiece(BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH, BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT);
+		}
+	}
 }
 
 void initStage(void)
