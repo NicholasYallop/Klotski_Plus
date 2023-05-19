@@ -18,6 +18,58 @@ static void spawnTile(int x, int y)
 	stage.tileTail = newTile;
 }
 
+static void doTileCollisions()
+{
+	Entity *tile;
+	Entity *comparisonTile;
+	Entity *prev = &stage.tileHead;
+
+	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+	{
+		Entity *innerPrev = tile;
+		bool tileCollided = false;
+
+		for (comparisonTile = tile->next; comparisonTile != NULL; comparisonTile = comparisonTile->next)
+		{
+			if (collision(tile->x, tile->y, tile->w, tile->h, comparisonTile->x, comparisonTile->y, comparisonTile->w, comparisonTile->h))
+			{
+				tileCollided = true;
+
+				if (comparisonTile == tile->next)
+				{
+					tile->next = comparisonTile->next;
+				}
+
+				innerPrev->next = comparisonTile->next;
+
+				free(comparisonTile);
+
+				comparisonTile = innerPrev;
+			}
+
+			innerPrev = comparisonTile;
+		}
+
+		if (tileCollided)
+		{
+			tileCollided = true;
+
+			if (tile == stage.tileTail)
+			{
+				stage.tileTail = prev;
+			}
+
+			prev->next = tile->next;
+
+			free(tile);
+
+			tile = prev;
+		}
+
+		prev = tile;
+	}
+}
+
 static void doTileClicks()
 {
 	if (app.leftClickActive)
@@ -49,6 +101,8 @@ static void doTiles(void)
 
 static void logic(void)
 {
+	doTileCollisions();
+
 	doTileClicks();
 
 	doTiles();
@@ -76,6 +130,7 @@ static void draw(void)
 static void initBoard(void)
 {
 	spawnTile(100, 100);
+	spawnTile(SCREEN_WIDTH-100-TILE_WIDTH, 100);
 }
 
 void initStage(void)
