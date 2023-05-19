@@ -1,0 +1,8 @@
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 800
+
+#define TILE_WIDTH 100
+#define TILE_HEIGHT 100
+
+#define MAX_KEYBOARD_KEYS 350
+
