@@ -3,6 +3,7 @@
 extern App app;
 static Stage stage;
 static SDL_Texture *tileTexture;
+static SDL_Texture *boardPieceTexture;
 
 static void spawnTile(int x, int y)
 {
@@ -16,6 +17,20 @@ static void spawnTile(int x, int y)
 
 	stage.tileTail->next = newTile;
 	stage.tileTail = newTile;
+}
+
+static void spawnBoardPiece(int x, int y)
+{
+	BoardPiece *newPiece = new BoardPiece();
+	
+	newPiece->x = x;
+	newPiece->y = y;
+	newPiece->w = BOARDPIECE_WIDTH;
+	newPiece->h = BOARDPIECE_HEIGHT;
+	newPiece->texture = boardPieceTexture;
+
+	stage.pieceTail->next = newPiece;
+	stage.pieceTail = newPiece;
 }
 
 static void doTileCollisions()
@@ -122,26 +137,51 @@ static void drawTiles(void)
 	}
 }
 
+static void drawBoard(void)
+{
+	BoardPiece *b;
+
+	for (b=stage.pieceHead.next; b != NULL; b = b->next){
+		if (!b->h || !b->w){
+			blit(b->texture, b->x, b->y);
+		}
+		else{
+			blit(b->texture, b->x, b->y, b->w, b->h);
+		}
+	}
+}
+
 static void draw(void)
 {
+	drawBoard();
+
 	drawTiles();
+}
+
+static void initTiles(void)
+{
+	spawnTile(110, 110);
+	spawnTile(210, 110);
 }
 
 static void initBoard(void)
 {
-	spawnTile(100, 100);
-	spawnTile(SCREEN_WIDTH-100-TILE_WIDTH, 100);
+	spawnBoardPiece(100, 100);
+	spawnBoardPiece(200, 100);
 }
 
 void initStage(void)
 {
-	tileTexture = loadTexture("gfx/eye_test.jpg");
+	boardPieceTexture = loadTexture("gfx/eye_test.jpg");
+	tileTexture = loadTexture("gfx/crash_test_dummy.png");
 
 	app.delegate.logic = logic;
 	app.delegate.draw = draw;
 
 	stage = Stage();
 	stage.tileTail = &stage.tileHead;
+	stage.pieceTail = &stage.pieceHead;
 
+	initTiles();
 	initBoard();
 }

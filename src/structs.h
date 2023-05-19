@@ -11,6 +11,15 @@ struct Entity {
 	Entity *next;
 };
 
+struct BoardPiece;
+
+struct BoardPiece {
+	float x, y;
+	int w, h;
+	SDL_Texture *texture;
+	BoardPiece *next;
+};
+
 typedef struct {
 	void (*logic)(void);
 	void (*draw)(void);
@@ -18,6 +27,7 @@ typedef struct {
 
 typedef struct {
 	Entity tileHead, *tileTail;
+	BoardPiece pieceHead, *pieceTail;
 } Stage;
 
 typedef struct {
