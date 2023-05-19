@@ -25,4 +25,5 @@ typedef struct {
 	SDL_Window *window;
 	Delegate delegate;
 	int keyboard[MAX_KEYBOARD_KEYS];
+	int leftClickActive, rightClickActive;
 } App;

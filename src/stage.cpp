@@ -18,9 +18,40 @@ static void spawnTile(int x, int y)
 	stage.tileTail = newTile;
 }
 
+static void doTileClicks()
+{
+	if (app.leftClickActive)
+	{
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+
+		Entity *tile;
+
+		for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+		{
+			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
+			{
+				tile->dx = 4;
+			}
+		}
+	}
+}
+
+static void doTiles(void)
+{
+	Entity *tile;
+
+	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+	{
+		tile->x += tile->dx;
+	}
+}
+
 static void logic(void)
 {
-	
+	doTileClicks();
+
+	doTiles();
 }
 
 static void drawTiles(void)

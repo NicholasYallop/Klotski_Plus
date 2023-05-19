@@ -4,5 +4,8 @@
 #define TILE_WIDTH 100
 #define TILE_HEIGHT 100
 
+#define CLICK_WIDTH 10
+#define CLICK_HEIGHT 10
+
 #define MAX_KEYBOARD_KEYS 350
 
