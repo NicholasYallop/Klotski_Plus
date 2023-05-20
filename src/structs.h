@@ -1,4 +1,5 @@
 #include "SDL2/SDL.h"
+#include "enums.h"
 
 struct Entity;
 
@@ -20,14 +21,16 @@ struct BoardPiece {
 	BoardPiece *next;
 };
 
-struct TileType {
-	int team;
-	SDL_Texture *texture;
-	void (*tileInteraction)(Entity);
-};
+struct TileType;
 
 struct Tile : Entity {
 	TileType *tileType;
+};
+
+struct TileType {
+	int team;
+	SDL_Texture *texture;
+	INTERACTION_FLAG (*tileInteraction)(Tile*, Tile*);
 };
 
 typedef struct {

@@ -35,6 +35,11 @@ static void spawnBoardPiece(int x, int y)
 	stage.pieceTail = newPiece;
 }
 
+static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
+{
+	return (tile1->tileType->tileInteraction(tile1, tile2));
+}
+
 static void doTileCollisions()
 {
 	Entity *tile;
@@ -44,14 +49,26 @@ static void doTileCollisions()
 	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
 	{
 		Entity *innerPrev = tile;
-		bool tileCollided = false;
+		bool DestoryOuterTile = false;
 
 		for (comparisonTile = tile->next; comparisonTile != NULL; comparisonTile = comparisonTile->next)
 		{
-			if (collision(tile->x, tile->y, tile->w, tile->h, comparisonTile->x, comparisonTile->y, comparisonTile->w, comparisonTile->h))
-			{
-				tileCollided = true;
+			bool DestroyComparisonTile = false;
+			INTERACTION_FLAG flags;
 
+			flags = doTileInteraction(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile));
+
+			printf("%u \n", flags);
+
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
+				DestoryOuterTile = true;
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTORY_TILE2)){
+				DestroyComparisonTile = true;
+			}
+
+			if (DestroyComparisonTile)
+			{
 				if (comparisonTile == tile->next)
 				{
 					tile->next = comparisonTile->next;
@@ -67,10 +84,8 @@ static void doTileCollisions()
 			innerPrev = comparisonTile;
 		}
 
-		if (tileCollided)
+		if (DestoryOuterTile)
 		{
-			tileCollided = true;
-
 			if (tile == stage.tileTail)
 			{
 				stage.tileTail = static_cast<Tile*>(prev);
@@ -160,21 +175,54 @@ static void draw(void)
 	drawTiles();
 }
 
+static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTile)
+{
+	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+
+	if (interactingTile->tileType->team == redTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTORY_TILE2;
+		}
+	}
+
+	return INTERACTION_FLAG::NONE;
+}
+
+static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile)
+{
+	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+
+	if (interactingTile->tileType->team == blueTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTORY_TILE2;
+		}
+	}
+
+	return INTERACTION_FLAG::NONE;
+}
+
 static void initColours(void)
 {
 	blueTile = TileType();
 	blueTile.team = 1;
 	blueTile.texture = loadTexture("gfx/blue.png");
+	blueTile.tileInteraction = BlueInteractions;
 
 	redTile = TileType();
 	redTile.team = 2;
 	redTile.texture = loadTexture("gfx/red.png");
+	redTile.tileInteraction = RedInteractions;
 }
 
 static void initTiles(void)
 {
 	spawnTile(110, 110, &blueTile);
 	spawnTile(210, 110, &redTile);
+	spawnTile(310, 110, &redTile);
 }
 
 static void initBoard(void)
