@@ -20,13 +20,23 @@ struct BoardPiece {
 	BoardPiece *next;
 };
 
+struct TileType {
+	int team;
+	SDL_Texture *texture;
+	void (*tileInteraction)(Entity);
+};
+
+struct Tile : Entity {
+	TileType *tileType;
+};
+
 typedef struct {
 	void (*logic)(void);
 	void (*draw)(void);
 } Delegate;
 
 typedef struct {
-	Entity tileHead, *tileTail;
+	Tile tileHead, *tileTail;
 	BoardPiece pieceHead, *pieceTail;
 } Stage;
 

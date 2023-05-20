@@ -2,18 +2,20 @@
 
 extern App app;
 static Stage stage;
-static SDL_Texture *tileTexture;
 static SDL_Texture *boardPieceTexture;
+static TileType blueTile;
+static TileType redTile;
 
-static void spawnTile(int x, int y)
+static void spawnTile(int x, int y, TileType *tileType)
 {
-	Entity *newTile = new Entity();
+	Tile *newTile = new Tile();
 	
 	newTile->x = x;
 	newTile->y = y;
 	newTile->w = TILE_WIDTH;
 	newTile->h = TILE_HEIGHT;
-	newTile->texture = tileTexture;
+	newTile->texture = tileType->texture;
+	newTile->tileType = tileType;
 
 	stage.tileTail->next = newTile;
 	stage.tileTail = newTile;
@@ -71,7 +73,7 @@ static void doTileCollisions()
 
 			if (tile == stage.tileTail)
 			{
-				stage.tileTail = prev;
+				stage.tileTail = static_cast<Tile*>(prev);
 			}
 
 			prev->next = tile->next;
@@ -158,10 +160,21 @@ static void draw(void)
 	drawTiles();
 }
 
+static void initColours(void)
+{
+	blueTile = TileType();
+	blueTile.team = 1;
+	blueTile.texture = loadTexture("gfx/blue.png");
+
+	redTile = TileType();
+	redTile.team = 2;
+	redTile.texture = loadTexture("gfx/red.png");
+}
+
 static void initTiles(void)
 {
-	spawnTile(110, 110);
-	spawnTile(210, 110);
+	spawnTile(110, 110, &blueTile);
+	spawnTile(210, 110, &redTile);
 }
 
 static void initBoard(void)
@@ -179,8 +192,7 @@ static void initBoard(void)
 
 void initStage(void)
 {
-	boardPieceTexture = loadTexture("gfx/eye_test.jpg");
-	tileTexture = loadTexture("gfx/crash_test_dummy.png");
+	boardPieceTexture = loadTexture("gfx/dark_brown.jpg");
 
 	app.delegate.logic = logic;
 	app.delegate.draw = draw;
@@ -189,6 +201,7 @@ void initStage(void)
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;
 
+	initColours();
 	initTiles();
 	initBoard();
 }
