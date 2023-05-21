@@ -58,8 +58,6 @@ static void doTileCollisions()
 
 			flags = doTileInteraction(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile));
 
-			printf("%u \n", flags);
-
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				DestoryOuterTile = true;
 			}
@@ -176,10 +174,10 @@ static void drawTiles(void)
 
 	for (e=stage.tileHead.next; e != NULL; e = e->next){
 		if (!e->h || !e->w){
-			blit(e->texture, e->x, e->y);
+			blitInBoard(e->texture, e->x, e->y);
 		}
 		else{
-			blit(e->texture, e->x, e->y, e->w, e->h);
+			blitInBoard(e->texture, e->x, e->y, e->w, e->h);
 		}
 	}
 }
