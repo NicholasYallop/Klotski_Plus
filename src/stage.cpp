@@ -3,6 +3,7 @@
 extern App app;
 extern bool Quit;
 static Stage stage;
+static int roundNumber = 0;
 static SDL_Texture *boardPieceTexture;
 static TileType blueTile;
 static TileType redTile;
@@ -99,7 +100,7 @@ static void doTileCollisions()
 	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
 	{
 		Entity *innerPrev = tile;
-		bool DestoryOuterTile = false;
+		bool DestroyOuterTile = false;
 
 		for (comparisonTile = tile->next; comparisonTile != NULL; comparisonTile = comparisonTile->next)
 		{
@@ -109,7 +110,7 @@ static void doTileCollisions()
 			flags = doTileInteraction(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile));
 
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
-				DestoryOuterTile = true;
+				DestroyOuterTile = true;
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE2)){
 				DestroyComparisonTile = true;
@@ -135,7 +136,7 @@ static void doTileCollisions()
 			innerPrev = comparisonTile;
 		}
 
-		if (DestoryOuterTile)
+		if (DestroyOuterTile)
 		{
 			if (tile == stage.tileTail)
 			{
@@ -212,9 +213,32 @@ static void doTiles(void)
 	}
 }
 
-void playerWins(void)
+static void initRoundZero(void)
 {
-	Quit=true;
+	spawnTileToGrid(010, 010, &blueTile);
+	spawnTileToGrid(010, 110, &redTile);
+}
+
+static void initRoundOne(void)
+{
+	spawnTileToGrid(010, 010, &blueTile);
+	spawnTileToGrid(110, 010, &redTile);
+	spawnTileToGrid(110, 110, &blueTile);
+	spawnTileToGrid(210, 010, &redTile);
+}
+
+static void playerWins(void)
+{
+	if (roundNumber < 1)
+	{
+		stage.tileTail = &stage.tileHead;
+		initRoundOne();
+		roundNumber++;
+	}
+	else
+	{
+		Quit=true;
+	}
 }
 
 static void logic(void)
@@ -337,14 +361,6 @@ static void initColours(void)
 	greyTile.clickInteraction = greyClick;
 }
 
-static void initTiles(void)
-{
-	spawnTileToGrid(010, 010, &blueTile);
-	spawnTileToGrid(110, 010, &redTile);
-	spawnTileToGrid(110, 110, &blueTile);
-	spawnTileToGrid(210, 010, &redTile);
-}
-
 static void initBoard(void)
 {
 	int i, j;
@@ -370,6 +386,6 @@ void initStage(void)
 	stage.pieceTail = &stage.pieceHead;
 
 	initColours();
-	initTiles();
 	initBoard();
+	initRoundZero();
 }
