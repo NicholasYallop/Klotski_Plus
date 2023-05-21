@@ -1,6 +1,7 @@
 #include "common.h"
 
 extern App app;
+extern bool Quit;
 static Stage stage;
 static SDL_Texture *boardPieceTexture;
 static TileType blueTile;
@@ -159,6 +160,11 @@ static void doTiles(void)
 	}
 }
 
+void playerWins(void)
+{
+	Quit=true;
+}
+
 static void logic(void)
 {
 	doTileCollisions();
@@ -166,6 +172,11 @@ static void logic(void)
 	doTileClicks();
 
 	doTiles();
+
+	if (stage.tileHead.next == NULL)
+	{
+		playerWins();
+	}
 }
 
 static void drawTiles(void)

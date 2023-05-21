@@ -1,6 +1,7 @@
 #include "common.h"
 
 App app;
+bool Quit = false;
 
 static void capFrameRate(long *then, float *remainder)
 {
@@ -43,7 +44,7 @@ int main(void){
 	//TODO: collect garbage
 	//atexit(cleanup);
 
-	while (1)
+	while (!Quit)
 	{
 		prepareScene();
 
