@@ -255,9 +255,9 @@ static void RedClick(Tile *callingTile)
 	callingTile->dy = 4;
 }
 
-static void greyInteractions(Tile *callingTile, Tile *interactingTile)
+static INTERACTION_FLAG greyInteractions(Tile *callingTile, Tile *interactingTile)
 {
-	return;
+	return INTERACTION_FLAG::NONE;
 }
 
 static void greyClick(Tile *callingTile)
