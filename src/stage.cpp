@@ -6,6 +6,7 @@ static Stage stage;
 static SDL_Texture *boardPieceTexture;
 static TileType blueTile;
 static TileType redTile;
+static TileType greyTile;
 
 static void spawnTile(int x, int y, TileType *tileType)
 {
@@ -254,6 +255,16 @@ static void RedClick(Tile *callingTile)
 	callingTile->dy = 4;
 }
 
+static void greyInteractions(Tile *callingTile, Tile *interactingTile)
+{
+	return;
+}
+
+static void greyClick(Tile *callingTile)
+{
+	return;
+}
+
 static void initColours(void)
 {
 	blueTile = TileType();
@@ -267,6 +278,12 @@ static void initColours(void)
 	redTile.texture = loadTexture("gfx/red.png");
 	redTile.tileInteraction = RedInteractions;
 	redTile.clickInteraction = RedClick;
+
+	greyTile = TileType();
+	greyTile.team = 3;
+	greyTile.texture = loadTexture("gfx/grey.png");
+	greyTile.tileInteraction = greyInteractions;
+	greyTile.clickInteraction = greyClick;
 }
 
 static void initTiles(void)
