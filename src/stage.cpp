@@ -23,6 +23,21 @@ static void spawnTile(int x, int y, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
+static void spawnTileToGrid(int adjustedX, int adjustedY, TileType *tileType)
+{
+	Tile *newTile = new Tile();
+	
+	newTile->x = adjustedX + BOARD_SCREEN_OFFSET_X;
+	newTile->y = adjustedY + BOARD_SCREEN_OFFSET_Y;
+	newTile->w = TILE_WIDTH;
+	newTile->h = TILE_HEIGHT;
+	newTile->texture = tileType->texture;
+	newTile->tileType = tileType;
+
+	stage.tileTail->next = newTile;
+	stage.tileTail = newTile;
+}
+
 static void spawnBoardPiece(int x, int y)
 {
 	BoardPiece *newPiece = new BoardPiece();
@@ -40,6 +55,12 @@ static void spawnBoardPiece(int x, int y)
 static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 {
 	return (tile1->tileType->tileInteraction(tile1, tile2));
+}
+
+static void closestTileSpawnpoint(int x, int y , int& xOut, int& yOut)
+{
+	xOut = x - (x - BOARD_SCREEN_OFFSET_X)%BOARDPIECE_WIDTH + (BOARDPIECE_WIDTH - TILE_WIDTH);
+	yOut  = y - (y - BOARD_SCREEN_OFFSET_Y)%BOARDPIECE_HEIGHT + (BOARDPIECE_HEIGHT - TILE_HEIGHT);
 }
 
 static void doTileCollisions()
@@ -63,8 +84,33 @@ static void doTileCollisions()
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				DestoryOuterTile = true;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTORY_TILE2)){
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE2)){
 				DestroyComparisonTile = true;
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
+				int xPiece=0, yPiece=0;
+				int contactX=0, contactY=0;
+				int xDiff = tile->x - comparisonTile->x;
+				if (xDiff >= 0)
+				{
+					contactX = tile -> x;
+				}
+				if (xDiff < 0)
+				{
+					contactX = comparisonTile -> x;
+				}
+
+				int yDiff = tile->y - comparisonTile->y;
+				if (yDiff >= 0)
+				{
+					contactY = tile -> y;
+				}
+				if (yDiff < 0)
+				{
+					contactY = comparisonTile -> y;
+				}
+				closestTileSpawnpoint(contactX, contactY, xPiece, yPiece);
+				spawnTile(xPiece, yPiece, &greyTile);
 			}
 
 			if (DestroyComparisonTile)
@@ -223,7 +269,7 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTORY_TILE2;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
 
@@ -243,7 +289,7 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTORY_TILE2;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
 
@@ -288,9 +334,10 @@ static void initColours(void)
 
 static void initTiles(void)
 {
-	spawnTile(110, 110, &blueTile);
-	spawnTile(210, 110, &redTile);
-	spawnTile(310, 110, &redTile);
+	spawnTileToGrid(010, 010, &blueTile);
+	spawnTileToGrid(110, 010, &redTile);
+	spawnTileToGrid(110, 110, &blueTile);
+	spawnTileToGrid(210, 010, &redTile);
 }
 
 static void initBoard(void)
