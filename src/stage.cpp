@@ -63,6 +63,33 @@ static void closestTileSpawnpoint(int x, int y , int& xOut, int& yOut)
 	yOut  = y - (y - BOARD_SCREEN_OFFSET_Y)%BOARDPIECE_HEIGHT + (BOARDPIECE_HEIGHT - TILE_HEIGHT);
 }
 
+static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
+{
+	int xSpawn=0, ySpawn=0;
+	int contactX=0, contactY=0;
+	int xDiff = tile1->x - tile2->x;
+	if (xDiff >= 0)
+	{
+		contactX = tile1 -> x;
+	}
+	if (xDiff < 0)
+	{
+		contactX = tile2 -> x;
+	}
+
+	int yDiff = tile1->y - tile2->y;
+	if (yDiff >= 0)
+	{
+		contactY = tile1 -> y;
+	}
+	if (yDiff < 0)
+	{
+		contactY = tile2 -> y;
+	}
+	closestTileSpawnpoint(contactX, contactY, xSpawn, ySpawn);
+	spawnTile(xSpawn, ySpawn, tileType);
+}
+
 static void doTileCollisions()
 {
 	Entity *tile;
@@ -88,29 +115,7 @@ static void doTileCollisions()
 				DestroyComparisonTile = true;
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
-				int xPiece=0, yPiece=0;
-				int contactX=0, contactY=0;
-				int xDiff = tile->x - comparisonTile->x;
-				if (xDiff >= 0)
-				{
-					contactX = tile -> x;
-				}
-				if (xDiff < 0)
-				{
-					contactX = comparisonTile -> x;
-				}
-
-				int yDiff = tile->y - comparisonTile->y;
-				if (yDiff >= 0)
-				{
-					contactY = tile -> y;
-				}
-				if (yDiff < 0)
-				{
-					contactY = comparisonTile -> y;
-				}
-				closestTileSpawnpoint(contactX, contactY, xPiece, yPiece);
-				spawnTile(xPiece, yPiece, &greyTile);
+				spawnTileFromCollision(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile), &greyTile);
 			}
 
 			if (DestroyComparisonTile)
