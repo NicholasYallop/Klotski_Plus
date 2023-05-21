@@ -115,19 +115,49 @@ static void doTileClicks()
 		{
 			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
 			{
-				tile->dx = 4;
+				static_cast<Tile*>(tile)->tileType->clickInteraction(static_cast<Tile*>(tile));
 			}
 		}
 	}
 }
 
+static int isOutsideBoard(Entity *entity)
+{
+	return (
+		(entity->x + entity->w) <= BOARD_SCREEN_OFFSET_X 
+		|| (entity->x) >= BOARD_SCREEN_OFFSET_X + (BOARDPIECE_COUNT_X) * BOARDPIECE_WIDTH
+		|| (entity->y + entity->h) <= BOARD_SCREEN_OFFSET_Y 
+		|| (entity->y) >= BOARD_SCREEN_OFFSET_Y + (BOARDPIECE_COUNT_Y) * BOARDPIECE_HEIGHT
+	);
+}
+
 static void doTiles(void)
 {
 	Entity *tile;
+	Entity *prev = &stage.tileHead;
 
 	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
 	{
-		tile->x += tile->dx;
+		if (isOutsideBoard(tile))
+		{
+			if (tile == stage.tileHead.next)
+			{
+				stage.tileHead.next = tile->next;
+			}
+
+			prev->next = tile -> next;
+
+			free(tile);
+
+			tile = prev;
+		}
+		else
+		{
+			tile->x += tile->dx;
+			tile->y += tile->dy;
+		}
+
+		prev = tile;
 	}
 }
 
@@ -190,6 +220,11 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 	return INTERACTION_FLAG::NONE;
 }
 
+static void BlueClick(Tile *callingTile)
+{
+	callingTile->dx = 4;
+}
+
 static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile)
 {
 	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
@@ -205,17 +240,24 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 	return INTERACTION_FLAG::NONE;
 }
 
+static void RedClick(Tile *callingTile)
+{
+	callingTile->dy = 4;
+}
+
 static void initColours(void)
 {
 	blueTile = TileType();
 	blueTile.team = 1;
 	blueTile.texture = loadTexture("gfx/blue.png");
 	blueTile.tileInteraction = BlueInteractions;
+	blueTile.clickInteraction = BlueClick;
 
 	redTile = TileType();
 	redTile.team = 2;
 	redTile.texture = loadTexture("gfx/red.png");
 	redTile.tileInteraction = RedInteractions;
+	redTile.clickInteraction = RedClick;
 }
 
 static void initTiles(void)
@@ -229,9 +271,9 @@ static void initBoard(void)
 {
 	int i, j;
 
-	for (i = 0 ; i<11 ; i += 1)
+	for (i = 0 ; i<BOARDPIECE_COUNT_X ; i += 1)
 	{
-		for (j = 0 ; j<6 ; j += 1)
+		for (j = 0 ; j<BOARDPIECE_COUNT_Y ; j += 1)
 		{
 			spawnBoardPiece(BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH, BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT);
 		}

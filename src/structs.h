@@ -31,6 +31,7 @@ struct TileType {
 	int team;
 	SDL_Texture *texture;
 	INTERACTION_FLAG (*tileInteraction)(Tile*, Tile*);
+	void (*clickInteraction)(Tile*);
 };
 
 typedef struct {
