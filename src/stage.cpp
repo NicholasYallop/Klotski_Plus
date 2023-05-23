@@ -24,16 +24,9 @@ static void spawnTile(int x, int y, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
-static void spawnTileToGrid(int adjustedX, int adjustedY, TileType *tileType)
+static void spawnTileToGrid(int i, int j, TileType *tileType)
 {
-	Tile *newTile = new Tile();
-	
-	newTile->x = adjustedX + BOARD_SCREEN_OFFSET_X;
-	newTile->y = adjustedY + BOARD_SCREEN_OFFSET_Y;
-	newTile->w = TILE_WIDTH;
-	newTile->h = TILE_HEIGHT;
-	newTile->texture = tileType->texture;
-	newTile->tileType = tileType;
+	Tile *newTile = new Tile(i, j, tileType);
 
 	stage.tileTail->next = newTile;
 	stage.tileTail = newTile;
@@ -58,15 +51,14 @@ static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 	return (tile1->tileType->tileInteraction(tile1, tile2));
 }
 
-static void closestTileSpawnpoint(int x, int y , int& xOut, int& yOut)
+static void containingTile(int x, int y , int& i, int& j)
 {
-	xOut = x - (x - BOARD_SCREEN_OFFSET_X)%BOARDPIECE_WIDTH + (BOARDPIECE_WIDTH - TILE_WIDTH);
-	yOut  = y - (y - BOARD_SCREEN_OFFSET_Y)%BOARDPIECE_HEIGHT + (BOARDPIECE_HEIGHT - TILE_HEIGHT);
+	i = std::floor((x-BOARD_SCREEN_OFFSET_X)/TILE_WIDTH);
+	j = std::floor((y-BOARD_SCREEN_OFFSET_Y)/TILE_HEIGHT);
 }
 
 static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 {
-	int xSpawn=0, ySpawn=0;
 	int contactX=0, contactY=0;
 	int xDiff = tile1->x - tile2->x;
 	if (xDiff >= 0)
@@ -87,8 +79,10 @@ static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 	{
 		contactY = tile2 -> y;
 	}
-	closestTileSpawnpoint(contactX, contactY, xSpawn, ySpawn);
-	spawnTile(xSpawn, ySpawn, tileType);
+
+	int i=0, j=0;
+	containingTile(contactX, contactY, i, j);
+	spawnTileToGrid(i, j, tileType);
 }
 
 static void doTileCollisions()
@@ -213,57 +207,60 @@ static void doTiles(void)
 	}
 }
 
+static void addTilesToRound(Round *round, Tile *tile)
+{
+	round->tileTail->next = tile;
+	round->tileTail = tile;
+}
+
+template<typename First, typename ... Tiles>
+static void addTilesToRound(Round *round, First arg, const Tiles&... rest)
+{
+	round->tileTail->next = arg;
+	round->tileTail = arg;
+	addTilesToRound(round, rest...);
+}
+
+static void addRoundsToStage()
+{
+}
+
+template<typename First, typename ... Rounds>
+static void addRoundsToStage(First arg, const Rounds&... rest)
+{
+	stage.roundTail->next = arg;
+	stage.roundTail = arg;
+	addRoundsToStage(rest...);
+}
+
 static void initRounds(void)
 {
 	Round *round0 = new Round();
 	round0->tileTail = &round0->tileHead;
-	stage.roundTail->next = round0;
-	stage.roundTail = round0;
-
-	Tile *newTile0 = new Tile();
-	newTile0->x = BOARD_SCREEN_OFFSET_X + 10;
-	newTile0->y = BOARD_SCREEN_OFFSET_Y + 10;
-	newTile0->w = TILE_WIDTH;
-	newTile0->h = TILE_HEIGHT;
-	newTile0->tileType = &redTile;
-	newTile0->texture = newTile0->tileType->texture;
-
-	round0->tileTail->next = newTile0;
-	round0->tileTail = newTile0;
+	addTilesToRound(
+		round0,
+		new Tile(1, 1, &blueTile),
+		new Tile(0, 1, &blueTile)
+	);
 
 	Round *round1 = new Round();
 	round1->tileTail = &round1->tileHead;
-
-	Tile *newTile1 = new Tile();
-	newTile1->x = BOARD_SCREEN_OFFSET_X + 10;
-	newTile1->y = BOARD_SCREEN_OFFSET_Y + 10;
-	newTile1->w = TILE_WIDTH;
-	newTile1->h = TILE_HEIGHT;
-	newTile1->tileType = &blueTile;
-	newTile1->texture = newTile1->tileType->texture;
-
-	round1->tileTail->next = newTile1;
-	round1->tileTail = newTile1;
-
-	stage.roundTail->next = round1;
-	stage.roundTail = round1;
+	addTilesToRound(
+		round1,
+		new Tile(0, 0, &blueTile),
+		new Tile(1, 0, &redTile),
+		new Tile(2, 0, &redTile),
+		new Tile(1, 1, &blueTile)
+	);
 
 	Round *round2 = new Round();
 	round2->tileTail = &round2->tileHead;
+	addTilesToRound(
+		round2,
+		new Tile(2, 2, &redTile)
+	);
 
-	Tile *newTile2 = new Tile();
-	newTile2->x = BOARD_SCREEN_OFFSET_X + 110;
-	newTile2->y = BOARD_SCREEN_OFFSET_Y + 110;
-	newTile2->w = TILE_WIDTH;
-	newTile2->h = TILE_HEIGHT;
-	newTile2->tileType = &blueTile;
-	newTile2->texture = newTile2->tileType->texture;
-
-	round2->tileTail->next = newTile2;
-	round2->tileTail = newTile2;
-
-	stage.roundTail->next = round2;
-	stage.roundTail = round2;
+	addRoundsToStage(round0, round1, round2);
 }
 
 static void spawnRoundTiles(void)
