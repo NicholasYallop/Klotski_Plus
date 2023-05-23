@@ -148,7 +148,7 @@ static void doTileCollisions()
 	}
 }
 
-static void doTileClicks()
+static void doClicks()
 {
 	if (app.leftClickActive)
 	{
@@ -162,6 +162,16 @@ static void doTileClicks()
 			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
 			{
 				static_cast<Tile*>(tile)->tileType->clickInteraction(static_cast<Tile*>(tile));
+			}
+		}
+
+		Entity *button;
+
+		for (button = stage.buttonHead.next; button != NULL; button=button->next)
+		{
+			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, button->x, button->y, button->w, button->h))
+			{
+				static_cast<Button*>(button)->Click();
 			}
 		}
 	}
@@ -296,7 +306,7 @@ static void logic(void)
 {
 	doTileCollisions();
 
-	doTileClicks();
+	doClicks();
 
 	doTiles();
 
@@ -320,6 +330,16 @@ static void drawTiles(void)
 	}
 }
 
+static void drawButtons(void)
+{
+	Entity *button;
+
+	for(button = stage.buttonHead.next; button != NULL; button=button->next)
+	{
+		blit(button->texture, button->x, button->y, button->w, button->h);
+	}
+}
+
 static void drawBoard(void)
 {
 	BoardPiece *b;
@@ -337,6 +357,8 @@ static void drawBoard(void)
 static void draw(void)
 {
 	drawBoard();
+
+	drawButtons();
 
 	drawTiles();
 }
@@ -425,6 +447,35 @@ static void initBoard(void)
 	}
 }
 
+static void resetRound()
+{
+	Entity *tile;
+
+	while(stage.tileHead.next)
+	{
+		tile = stage.tileHead.next;
+		stage.tileHead.next = stage.tileHead.next->next;
+		free(tile);
+	}
+	stage.tileTail = &stage.tileHead;
+
+	spawnRoundTiles();
+}
+
+static void initButtons()
+{	
+	Button *button = new Button();
+	button->x = 10;
+	button->y = 10;
+	button->w = 10;
+	button->h = 10;
+	button->texture = loadTexture("gfx/green.png");
+	button->Click = resetRound;
+
+	stage.buttonTail->next = button;
+	stage.buttonTail = button;
+}
+
 void initStage(void)
 {
 	boardPieceTexture = loadTexture("gfx/dark_brown.jpg");
@@ -436,7 +487,9 @@ void initStage(void)
 	stage.roundTail = &stage.roundHead;
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;
+	stage.buttonTail = &stage.buttonHead;
 
+	initButtons();
 	initColours();
 	initRounds();
 	initBoard();

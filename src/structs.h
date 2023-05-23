@@ -52,6 +52,12 @@ struct Round {
 	Round *next;
 };
 
+struct Button;
+
+struct Button : Entity {
+	void (*Click)(void);
+};
+
 typedef struct {
 	void (*logic)(void);
 	void (*draw)(void);
@@ -61,6 +67,7 @@ typedef struct {
 	Tile tileHead, *tileTail;
 	BoardPiece pieceHead, *pieceTail;
 	Round roundHead, *roundTail;
+	Button buttonHead, *buttonTail;
 } Stage;
 
 typedef struct {
