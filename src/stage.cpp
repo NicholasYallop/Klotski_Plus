@@ -470,22 +470,22 @@ static void quit()
 static void initButtons()
 {	
 	Button *button = new Button();
-	button->x = 10;
+	button->x = SCREEN_WIDTH - 35;
 	button->y = 10;
-	button->w = 10;
-	button->h = 10;
-	button->texture = loadTexture("gfx/green.png");
+	button->w = 15;
+	button->h = 15;
+	button->texture = loadTexture("gfx/red_cross.png");
 	button->Click = resetRound;
 
 	stage.buttonTail->next = button;
 	stage.buttonTail = button;
 
 	Button *button2 = new Button();
-	button2->x = 25;
+	button2->x = 10;
 	button2->y = 10;
-	button2->w = 10;
-	button2->h = 10;
-	button2->texture = loadTexture("gfx/green.png");
+	button2->w = 40;
+	button2->h = 40;
+	button2->texture = loadTexture("gfx/restart.png");
 	button2->Click = quit;
 
 	stage.buttonTail->next = button2;
