@@ -3,7 +3,7 @@
 extern App app;
 extern bool Quit;
 static Stage stage;
-static int roundNumber = 0;
+static Round *currentRound;
 static SDL_Texture *boardPieceTexture;
 static TileType blueTile;
 static TileType redTile;
@@ -213,10 +213,67 @@ static void doTiles(void)
 	}
 }
 
-static void initRoundZero(void)
+static void initRounds(void)
 {
-	spawnTileToGrid(010, 010, &blueTile);
-	spawnTileToGrid(010, 110, &redTile);
+	Round *round0 = new Round();
+	round0->tileTail = &round0->tileHead;
+	stage.roundTail->next = round0;
+	stage.roundTail = round0;
+
+	Tile *newTile0 = new Tile();
+	newTile0->x = BOARD_SCREEN_OFFSET_X + 10;
+	newTile0->y = BOARD_SCREEN_OFFSET_Y + 10;
+	newTile0->w = TILE_WIDTH;
+	newTile0->h = TILE_HEIGHT;
+	newTile0->tileType = &redTile;
+	newTile0->texture = newTile0->tileType->texture;
+
+	round0->tileTail->next = newTile0;
+	round0->tileTail = newTile0;
+
+	Round *round1 = new Round();
+	round1->tileTail = &round1->tileHead;
+
+	Tile *newTile1 = new Tile();
+	newTile1->x = BOARD_SCREEN_OFFSET_X + 10;
+	newTile1->y = BOARD_SCREEN_OFFSET_Y + 10;
+	newTile1->w = TILE_WIDTH;
+	newTile1->h = TILE_HEIGHT;
+	newTile1->tileType = &blueTile;
+	newTile1->texture = newTile1->tileType->texture;
+
+	round1->tileTail->next = newTile1;
+	round1->tileTail = newTile1;
+
+	stage.roundTail->next = round1;
+	stage.roundTail = round1;
+
+	Round *round2 = new Round();
+	round2->tileTail = &round2->tileHead;
+
+	Tile *newTile2 = new Tile();
+	newTile2->x = BOARD_SCREEN_OFFSET_X + 110;
+	newTile2->y = BOARD_SCREEN_OFFSET_Y + 110;
+	newTile2->w = TILE_WIDTH;
+	newTile2->h = TILE_HEIGHT;
+	newTile2->tileType = &blueTile;
+	newTile2->texture = newTile2->tileType->texture;
+
+	round2->tileTail->next = newTile2;
+	round2->tileTail = newTile2;
+
+	stage.roundTail->next = round2;
+	stage.roundTail = round2;
+}
+
+static void spawnRoundTiles(void)
+{
+	Entity *tile;
+
+	for (tile = currentRound->tileHead.next; tile != NULL; tile=tile->next)
+	{
+		spawnTile(tile->x, tile->y, static_cast<Tile*>(tile)->tileType);
+	}
 }
 
 static void initRoundOne(void)
@@ -227,13 +284,19 @@ static void initRoundOne(void)
 	spawnTileToGrid(210, 010, &redTile);
 }
 
+static void play()
+{
+	currentRound = &stage.roundHead;
+}
+
 static void playerWins(void)
 {
-	if (roundNumber < 1)
+	if (currentRound->next != NULL)
 	{
+		currentRound = currentRound->next;
 		stage.tileTail = &stage.tileHead;
-		initRoundOne();
-		roundNumber++;
+		printf("got here\n");
+		spawnRoundTiles();
 	}
 	else
 	{
@@ -382,10 +445,12 @@ void initStage(void)
 	app.delegate.draw = draw;
 
 	stage = Stage();
+	stage.roundTail = &stage.roundHead;
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;
 
 	initColours();
+	initRounds();
 	initBoard();
-	initRoundZero();
+	play();
 }

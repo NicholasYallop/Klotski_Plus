@@ -34,6 +34,13 @@ struct TileType {
 	void (*clickInteraction)(Tile*);
 };
 
+struct Round;
+
+struct Round {
+	Tile tileHead, *tileTail;
+	Round *next;
+};
+
 typedef struct {
 	void (*logic)(void);
 	void (*draw)(void);
@@ -42,6 +49,7 @@ typedef struct {
 typedef struct {
 	Tile tileHead, *tileTail;
 	BoardPiece pieceHead, *pieceTail;
+	Round roundHead, *roundTail;
 } Stage;
 
 typedef struct {
