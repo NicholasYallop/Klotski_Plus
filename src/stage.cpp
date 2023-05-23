@@ -276,14 +276,6 @@ static void spawnRoundTiles(void)
 	}
 }
 
-static void initRoundOne(void)
-{
-	spawnTileToGrid(010, 010, &blueTile);
-	spawnTileToGrid(110, 010, &redTile);
-	spawnTileToGrid(110, 110, &blueTile);
-	spawnTileToGrid(210, 010, &redTile);
-}
-
 static void play()
 {
 	currentRound = &stage.roundHead;
@@ -295,7 +287,6 @@ static void playerWins(void)
 	{
 		currentRound = currentRound->next;
 		stage.tileTail = &stage.tileHead;
-		printf("got here\n");
 		spawnRoundTiles();
 	}
 	else
