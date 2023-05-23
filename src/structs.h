@@ -32,6 +32,7 @@ struct TileType {
 
 struct Tile : Entity {
 	TileType *tileType;
+	bool toDestroy = false;
 	Tile() : Entity() {}
 	Tile(int i,  int j, TileType *TileType) : Entity()
 	{

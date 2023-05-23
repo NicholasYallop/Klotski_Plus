@@ -53,8 +53,8 @@ static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 
 static void containingTile(int x, int y , int& i, int& j)
 {
-	i = std::floor((x-BOARD_SCREEN_OFFSET_X)/TILE_WIDTH);
-	j = std::floor((y-BOARD_SCREEN_OFFSET_Y)/TILE_HEIGHT);
+	i = std::floor((x-BOARD_SCREEN_OFFSET_X)/BOARDPIECE_WIDTH);
+	j = std::floor((y-BOARD_SCREEN_OFFSET_Y)/BOARDPIECE_HEIGHT);
 }
 
 static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
@@ -87,54 +87,38 @@ static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 
 static void doTileCollisions()
 {
-	Entity *tile;
-	Entity *comparisonTile;
-	Entity *prev = &stage.tileHead;
+	Tile *tile;
+	Tile *comparisonTile;
+	Tile *prev = &stage.tileHead;
 
-	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
-		Entity *innerPrev = tile;
-		bool DestroyOuterTile = false;
+		Tile *innerPrev = tile;
 
-		for (comparisonTile = tile->next; comparisonTile != NULL; comparisonTile = comparisonTile->next)
+		for (comparisonTile = static_cast<Tile*>(tile->next); comparisonTile != NULL; comparisonTile = static_cast<Tile*>(comparisonTile->next))
 		{
-			bool DestroyComparisonTile = false;
 			INTERACTION_FLAG flags;
 
-			flags = doTileInteraction(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile));
+			flags = doTileInteraction(tile, comparisonTile);
 
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
-				DestroyOuterTile = true;
+				tile->toDestroy = true;
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE2)){
-				DestroyComparisonTile = true;
+				comparisonTile->toDestroy = true;
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
-				spawnTileFromCollision(static_cast<Tile*>(tile), static_cast<Tile*>(comparisonTile), &greyTile);
+				spawnTileFromCollision(tile, comparisonTile, &greyTile);
 			}
-
-			if (DestroyComparisonTile)
-			{
-				if (comparisonTile == tile->next)
-				{
-					tile->next = comparisonTile->next;
-				}
-
-				innerPrev->next = comparisonTile->next;
-
-				free(comparisonTile);
-
-				comparisonTile = innerPrev;
-			}
-
-			innerPrev = comparisonTile;
 		}
-
-		if (DestroyOuterTile)
+	}
+	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
+	{
+		if (tile->toDestroy)
 		{
 			if (tile == stage.tileTail)
 			{
-				stage.tileTail = static_cast<Tile*>(prev);
+				stage.tileTail = prev;
 			}
 
 			prev->next = tile->next;
@@ -260,17 +244,72 @@ static void initRounds(void)
 		new Tile(0, 0, &blueTile),
 		new Tile(1, 0, &redTile),
 		new Tile(2, 0, &redTile),
-		new Tile(1, 1, &blueTile)
+		new Tile(1, 1, &blueTile),
+		new Tile(2, 1, &blueTile)
 	);
 
 	Round *round2 = new Round();
 	round2->tileTail = &round2->tileHead;
 	addTilesToRound(
 		round2,
-		new Tile(2, 2, &redTile)
+		new Tile(7, 1, &redTile),
+		new Tile(5, 2, &blueTile),
+		new Tile(6, 2, &redTile),
+		new Tile(7, 2, &blueTile),
+		new Tile(8, 2, &redTile),
+		new Tile(6, 3, &blueTile),
+		new Tile(7, 3, &redTile)
 	);
 
-	addRoundsToStage(round0, round1, round2);
+	Round *round3 = new Round();
+	round3->tileTail = &round3->tileHead;
+	addTilesToRound(
+		round3,
+		new Tile(0, 0, &blueTile),
+		new Tile(1, 1, &blueTile),
+		new Tile(2, 2, &blueTile),
+		new Tile(3, 3, &blueTile),
+		new Tile(4, 4, &blueTile),
+		new Tile(5, 5, &blueTile),
+
+		new Tile(0, 5, &redTile),
+		new Tile(1, 4, &redTile),
+		new Tile(2, 3, &redTile),
+		new Tile(3, 2, &redTile),
+		new Tile(4, 1, &redTile),
+		new Tile(5, 0, &redTile)
+	);
+
+	Round *round4 = new Round();
+	round4->tileTail = &round4->tileHead;
+	addTilesToRound(
+		round4,
+		new Tile(4, 2, &blueTile),
+		new Tile(5, 3, &redTile),
+		new Tile(6, 2, &blueTile),
+		new Tile(6, 1, &redTile),
+		new Tile(5, 0, &blueTile),
+		new Tile(4, 0, &redTile),
+		new Tile(3, 0, &blueTile),
+		new Tile(2, 1, &redTile),
+		new Tile(2, 2, &blueTile),
+		new Tile(2, 3, &redTile),
+		new Tile(2, 4, &blueTile),
+		new Tile(3, 5, &redTile),
+		new Tile(4, 5, &blueTile),
+		new Tile(5, 5, &redTile),
+		new Tile(6, 5, &blueTile),
+		new Tile(7, 5, &redTile),
+		new Tile(8, 4, &blueTile),
+		new Tile(8, 3, &redTile),
+		new Tile(8, 2, &blueTile),
+		new Tile(8, 1, &redTile),
+		new Tile(8, 0, &blueTile)
+
+	);
+
+	//addRoundsToStage(round0, round1, round2, round3, round4);
+	addRoundsToStage(round4);
 }
 
 static void spawnRoundTiles(void)
@@ -367,11 +406,18 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 {
 	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
 
+	if (interactingTile->tileType->team == blueTile.team)
+	{
+		if (interactingTile->x == callingTile->x && interactingTile->y == callingTile->y)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1;
+		}
+	}
 	if (interactingTile->tileType->team == redTile.team)
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
 
@@ -469,27 +515,27 @@ static void quit()
 
 static void initButtons()
 {	
-	Button *button = new Button();
-	button->x = SCREEN_WIDTH - 35;
-	button->y = 10;
-	button->w = 15;
-	button->h = 15;
-	button->texture = loadTexture("gfx/red_cross.png");
-	button->Click = resetRound;
+	Button *quitButton = new Button();
+	quitButton->x = SCREEN_WIDTH - 35;
+	quitButton->y = 10;
+	quitButton->w = 15;
+	quitButton->h = 15;
+	quitButton->texture = loadTexture("gfx/red_cross.png");
+	quitButton->Click = quit;
 
-	stage.buttonTail->next = button;
-	stage.buttonTail = button;
+	stage.buttonTail->next = quitButton;
+	stage.buttonTail = quitButton;
 
-	Button *button2 = new Button();
-	button2->x = 10;
-	button2->y = 10;
-	button2->w = 40;
-	button2->h = 40;
-	button2->texture = loadTexture("gfx/restart.png");
-	button2->Click = quit;
+	Button *resetButton = new Button();
+	resetButton->x = 10;
+	resetButton->y = 10;
+	resetButton->w = 40;
+	resetButton->h = 40;
+	resetButton->texture = loadTexture("gfx/restart.png");
+	resetButton->Click = resetRound;
 
-	stage.buttonTail->next = button2;
-	stage.buttonTail = button2;
+	stage.buttonTail->next = resetButton;
+	stage.buttonTail = resetButton;
 }
 
 void initStage(void)
