@@ -462,6 +462,11 @@ static void resetRound()
 	spawnRoundTiles();
 }
 
+static void quit()
+{
+	Quit=true;
+}
+
 static void initButtons()
 {	
 	Button *button = new Button();
@@ -474,6 +479,17 @@ static void initButtons()
 
 	stage.buttonTail->next = button;
 	stage.buttonTail = button;
+
+	Button *button2 = new Button();
+	button2->x = 25;
+	button2->y = 10;
+	button2->w = 10;
+	button2->h = 10;
+	button2->texture = loadTexture("gfx/green.png");
+	button2->Click = quit;
+
+	stage.buttonTail->next = button2;
+	stage.buttonTail = button2;
 }
 
 void initStage(void)
