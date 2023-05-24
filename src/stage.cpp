@@ -34,7 +34,6 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
-
 static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 {
 	return (tile1->tileType->tileInteraction(tile1, tile2));
@@ -82,8 +81,6 @@ static void doTileCollisions()
 
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
-		Tile *innerPrev = tile;
-
 		for (comparisonTile = static_cast<Tile*>(tile->next); comparisonTile != NULL; comparisonTile = static_cast<Tile*>(comparisonTile->next))
 		{
 			INTERACTION_FLAG flags;
@@ -131,7 +128,7 @@ static int isOutsideBoard(Entity *entity)
 	);
 }
 
-static void doTiles(void)
+static void destroyOutOfBoundsTiles(void)
 {
 	Entity *tile;
 	Entity *prev = &stage.tileHead;
@@ -159,6 +156,33 @@ static void doTiles(void)
 
 		prev = tile;
 	}
+}
+
+static void doRollingEffects()
+{
+	Tile *tile;
+	for(tile=static_cast<Tile*>(stage.tileHead.next)
+		; tile!=NULL
+		; tile = static_cast<Tile*>(tile->next))
+	{
+		if (tile->rollingEffectHead.next == NULL)
+		{
+			printf("empty effect list for tile\n");
+		}
+		RollingEffect *effect;
+		for (effect=tile->rollingEffectHead.next
+			; effect!=NULL
+			; effect=effect->next)
+		{
+			printf("%s\n", effect->print);
+		}
+	}
+}
+
+static void doTiles(void)
+{
+	destroyOutOfBoundsTiles();
+	doRollingEffects();
 }
 
 static void addTilesToRound(Round *round, Tile *tile)
@@ -276,7 +300,6 @@ static void addRoundsToStage(First arg, const Rounds&... rest)
 static void initRounds(void)
 {
 	Round *round0 = new Round();
-	round0->tileTail = &round0->tileHead;
 	addTilesToRound(
 		round0,
 		new Tile(1, 1, &blueTile),
@@ -284,7 +307,6 @@ static void initRounds(void)
 	);
 
 	Round *round1 = new Round();
-	round1->tileTail = &round1->tileHead;
 	addTilesToRound(
 		round1,
 		new Tile(0, 0, &blueTile),
@@ -295,7 +317,6 @@ static void initRounds(void)
 	);
 
 	Round *round2 = new Round();
-	round2->tileTail = &round2->tileHead;
 	addTilesToRound(
 		round2,
 		new Tile(7, 1, &redTile),
@@ -308,7 +329,6 @@ static void initRounds(void)
 	);
 
 	Round *round3 = new Round();
-	round3->tileTail = &round3->tileHead;
 	addTilesToRound(
 		round3,
 		new Tile(0, 0, &blueTile),
@@ -327,7 +347,6 @@ static void initRounds(void)
 	);
 
 	Round *round4 = new Round();
-	round4->tileTail = &round4->tileHead;
 	addTilesToRound(
 		round4,
 		new Tile(4, 2, &blueTile),
@@ -354,8 +373,21 @@ static void initRounds(void)
 
 	);
 
+	Tile *testTile = new Tile(0, 0, &redTile);
+	RollingEffect *effect2 = new RollingEffect();
+	effect2->print ="effect accessed \n";
+	testTile->rollingEffectTail->next = effect2;
+	testTile->rollingEffectTail = effect2;
+	RollingEffect *effect = new RollingEffect();
+	effect->print ="effect accessed \n";
+	testTile->rollingEffectTail->next = effect;
+	testTile->rollingEffectTail = effect;
+
+	Round *round5 = new Round();
+	addTilesToRound(round5, testTile);
+
 	//addRoundsToStage(round0, round1, round2, round3, round4);
-	addRoundsToStage(round4);
+	addRoundsToStage(round5);
 }
 
 static void resetRound()
@@ -583,6 +615,7 @@ void initStage(void)
 	app.delegate.draw = draw;
 
 	stage = Stage();
+	// can't do linked list initialisation in constructor as stage is static
 	stage.roundTail = &stage.roundHead;
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;

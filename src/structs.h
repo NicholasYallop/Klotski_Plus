@@ -30,11 +30,19 @@ struct TileType {
 	void (*clickInteraction)(Tile*);
 };
 
+struct RollingEffect;
+struct RollingEffect
+{
+	RollingEffect *next;
+	char* print;
+};
+
 struct Tile : Entity {
 	TileType *tileType;
+	RollingEffect rollingEffectHead, *rollingEffectTail;
 	bool toDestroy = false;
-	Tile() : Entity() {}
-	Tile(int i,  int j, TileType *TileType) : Entity()
+	Tile() : Entity(), rollingEffectHead(), rollingEffectTail(&rollingEffectHead) {}
+	Tile(int i,  int j, TileType *TileType) : Tile() 
 	{
 		x = BOARD_SCREEN_OFFSET_X + (i+1)*BOARDPIECE_WIDTH - TILE_WIDTH;
 		y = BOARD_SCREEN_OFFSET_Y + (j+1)*BOARDPIECE_HEIGHT - TILE_HEIGHT;
@@ -51,6 +59,7 @@ struct Round;
 struct Round {
 	Tile tileHead, *tileTail;
 	Round *next;
+	Round() : tileHead(), tileTail(&tileHead){}
 };
 
 struct Button;
@@ -64,12 +73,12 @@ typedef struct {
 	void (*draw)(void);
 } Delegate;
 
-typedef struct {
+struct Stage {
 	Tile tileHead, *tileTail;
 	BoardPiece pieceHead, *pieceTail;
 	Round roundHead, *roundTail;
 	Button buttonHead, *buttonTail;
-} Stage;
+};
 
 typedef struct {
 	SDL_Renderer *renderer;
