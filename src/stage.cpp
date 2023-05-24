@@ -9,6 +9,8 @@ static TileType blueTile;
 static TileType redTile;
 static TileType greyTile;
 
+#pragma region tiles
+
 static void spawnTile(int x, int y, TileType *tileType)
 {
 	Tile *newTile = new Tile();
@@ -32,19 +34,6 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
-static void spawnBoardPiece(int x, int y)
-{
-	BoardPiece *newPiece = new BoardPiece();
-	
-	newPiece->x = x;
-	newPiece->y = y;
-	newPiece->w = BOARDPIECE_WIDTH;
-	newPiece->h = BOARDPIECE_HEIGHT;
-	newPiece->texture = boardPieceTexture;
-
-	stage.pieceTail->next = newPiece;
-	stage.pieceTail = newPiece;
-}
 
 static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 {
@@ -132,35 +121,6 @@ static void doTileCollisions()
 	}
 }
 
-static void doClicks()
-{
-	if (app.leftClickActive)
-	{
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-
-		Entity *tile;
-
-		for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
-		{
-			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
-			{
-				static_cast<Tile*>(tile)->tileType->clickInteraction(static_cast<Tile*>(tile));
-			}
-		}
-
-		Entity *button;
-
-		for (button = stage.buttonHead.next; button != NULL; button=button->next)
-		{
-			if (collision(x, y, CLICK_HEIGHT, CLICK_WIDTH, button->x, button->y, button->w, button->h))
-			{
-				static_cast<Button*>(button)->Click();
-			}
-		}
-	}
-}
-
 static int isOutsideBoard(Entity *entity)
 {
 	return (
@@ -214,6 +174,92 @@ static void addTilesToRound(Round *round, First arg, const Tiles&... rest)
 	round->tileTail = arg;
 	addTilesToRound(round, rest...);
 }
+
+static void spawnRoundTiles(void)
+{
+	Entity *tile;
+
+	for (tile = currentRound->tileHead.next; tile != NULL; tile=tile->next)
+	{
+		spawnTile(tile->x, tile->y, static_cast<Tile*>(tile)->tileType);
+	}
+}
+
+static void doTileClicks(int xMouse, int yMouse)
+{
+	Entity *tile;
+
+		for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+		{
+			if (collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
+			{
+				static_cast<Tile*>(tile)->tileType->clickInteraction(static_cast<Tile*>(tile));
+			}
+		}
+}
+
+static void drawTiles(void)
+{
+	Entity *e;
+
+	for (e=stage.tileHead.next; e != NULL; e = e->next){
+		if (!e->h || !e->w){
+			blitInBoard(e->texture, e->x, e->y);
+		}
+		else{
+			blitInBoard(e->texture, e->x, e->y, e->w, e->h);
+		}
+	}
+}
+
+#pragma endregion tiles
+
+#pragma region boardPieces
+
+static void spawnBoardPiece(int x, int y)
+{
+	BoardPiece *newPiece = new BoardPiece();
+	
+	newPiece->x = x;
+	newPiece->y = y;
+	newPiece->w = BOARDPIECE_WIDTH;
+	newPiece->h = BOARDPIECE_HEIGHT;
+	newPiece->texture = boardPieceTexture;
+
+	stage.pieceTail->next = newPiece;
+	stage.pieceTail = newPiece;
+}
+
+static void initBoard(void)
+{
+	int i, j;
+
+	for (i = 0 ; i<BOARDPIECE_COUNT_X ; i += 1)
+	{
+		for (j = 0 ; j<BOARDPIECE_COUNT_Y ; j += 1)
+		{
+			spawnBoardPiece(BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH, BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT);
+		}
+	}
+}
+
+static void drawBoard(void)
+{
+	BoardPiece *b;
+
+	for (b=stage.pieceHead.next; b != NULL; b = b->next){
+		if (!b->h || !b->w){
+			blit(b->texture, b->x, b->y);
+		}
+		else{
+			blit(b->texture, b->x, b->y, b->w, b->h);
+		}
+	}
+}
+
+#pragma endregion boardPieces
+
+#pragma region Rounds
 
 static void addRoundsToStage()
 {
@@ -312,13 +358,89 @@ static void initRounds(void)
 	addRoundsToStage(round4);
 }
 
-static void spawnRoundTiles(void)
+static void resetRound()
 {
 	Entity *tile;
 
-	for (tile = currentRound->tileHead.next; tile != NULL; tile=tile->next)
+	while(stage.tileHead.next)
 	{
-		spawnTile(tile->x, tile->y, static_cast<Tile*>(tile)->tileType);
+		tile = stage.tileHead.next;
+		stage.tileHead.next = stage.tileHead.next->next;
+		free(tile);
+	}
+	stage.tileTail = &stage.tileHead;
+
+	spawnRoundTiles();
+}
+
+#pragma endregion Rounds
+
+#pragma region Buttons
+
+static void doButtonClicks(int xMouse, int yMouse)
+{
+	Entity *button;
+
+		for (button = stage.buttonHead.next; button != NULL; button=button->next)
+		{
+			if (collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, button->x, button->y, button->w, button->h))
+			{
+				static_cast<Button*>(button)->Click();
+			}
+		}
+}
+
+static void drawButtons(void)
+{
+	Entity *button;
+
+	for(button = stage.buttonHead.next; button != NULL; button=button->next)
+	{
+		blit(button->texture, button->x, button->y, button->w, button->h);
+	}
+}
+
+static void quit(void);
+
+static void initButtons()
+{	
+	Button *quitButton = new Button();
+	quitButton->x = SCREEN_WIDTH - 35;
+	quitButton->y = 10;
+	quitButton->w = 15;
+	quitButton->h = 15;
+	quitButton->texture = loadTexture("gfx/red_cross.png");
+	quitButton->Click = quit;
+
+	stage.buttonTail->next = quitButton;
+	stage.buttonTail = quitButton;
+
+	Button *resetButton = new Button();
+	resetButton->x = 10;
+	resetButton->y = 10;
+	resetButton->w = 40;
+	resetButton->h = 40;
+	resetButton->texture = loadTexture("gfx/restart.png");
+	resetButton->Click = resetRound;
+
+	stage.buttonTail->next = resetButton;
+	stage.buttonTail = resetButton;
+}
+
+#pragma endregion Buttons
+
+#pragma region Play
+
+static void doClicks()
+{
+	if (app.leftClickActive)
+	{
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+
+		doTileClicks(x, y);
+
+		doButtonClicks(x, y);
 	}
 }
 
@@ -341,66 +463,14 @@ static void playerWins(void)
 	}
 }
 
-static void logic(void)
+static void quit()
 {
-	doTileCollisions();
-
-	doClicks();
-
-	doTiles();
-
-	if (stage.tileHead.next == NULL)
-	{
-		playerWins();
-	}
+	Quit=true;
 }
 
-static void drawTiles(void)
-{
-	Entity *e;
+#pragma endregion Play
 
-	for (e=stage.tileHead.next; e != NULL; e = e->next){
-		if (!e->h || !e->w){
-			blitInBoard(e->texture, e->x, e->y);
-		}
-		else{
-			blitInBoard(e->texture, e->x, e->y, e->w, e->h);
-		}
-	}
-}
-
-static void drawButtons(void)
-{
-	Entity *button;
-
-	for(button = stage.buttonHead.next; button != NULL; button=button->next)
-	{
-		blit(button->texture, button->x, button->y, button->w, button->h);
-	}
-}
-
-static void drawBoard(void)
-{
-	BoardPiece *b;
-
-	for (b=stage.pieceHead.next; b != NULL; b = b->next){
-		if (!b->h || !b->w){
-			blit(b->texture, b->x, b->y);
-		}
-		else{
-			blit(b->texture, b->x, b->y, b->w, b->h);
-		}
-	}
-}
-
-static void draw(void)
-{
-	drawBoard();
-
-	drawButtons();
-
-	drawTiles();
-}
+#pragma region Colours
 
 static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTile)
 {
@@ -480,62 +550,29 @@ static void initColours(void)
 	greyTile.clickInteraction = greyClick;
 }
 
-static void initBoard(void)
-{
-	int i, j;
+#pragma endregion Colours
 
-	for (i = 0 ; i<BOARDPIECE_COUNT_X ; i += 1)
+static void logic(void)
+{
+	doTileCollisions();
+
+	doClicks();
+
+	doTiles();
+
+	if (stage.tileHead.next == NULL)
 	{
-		for (j = 0 ; j<BOARDPIECE_COUNT_Y ; j += 1)
-		{
-			spawnBoardPiece(BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH, BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT);
-		}
+		playerWins();
 	}
 }
 
-static void resetRound()
+static void draw(void)
 {
-	Entity *tile;
+	drawBoard();
 
-	while(stage.tileHead.next)
-	{
-		tile = stage.tileHead.next;
-		stage.tileHead.next = stage.tileHead.next->next;
-		free(tile);
-	}
-	stage.tileTail = &stage.tileHead;
+	drawButtons();
 
-	spawnRoundTiles();
-}
-
-static void quit()
-{
-	Quit=true;
-}
-
-static void initButtons()
-{	
-	Button *quitButton = new Button();
-	quitButton->x = SCREEN_WIDTH - 35;
-	quitButton->y = 10;
-	quitButton->w = 15;
-	quitButton->h = 15;
-	quitButton->texture = loadTexture("gfx/red_cross.png");
-	quitButton->Click = quit;
-
-	stage.buttonTail->next = quitButton;
-	stage.buttonTail = quitButton;
-
-	Button *resetButton = new Button();
-	resetButton->x = 10;
-	resetButton->y = 10;
-	resetButton->w = 40;
-	resetButton->h = 40;
-	resetButton->texture = loadTexture("gfx/restart.png");
-	resetButton->Click = resetRound;
-
-	stage.buttonTail->next = resetButton;
-	stage.buttonTail = resetButton;
+	drawTiles();
 }
 
 void initStage(void)
