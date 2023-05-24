@@ -34,13 +34,14 @@ struct RollingEffect;
 struct RollingEffect
 {
 	RollingEffect *next;
-	char* print;
+	int parameter;
+	EFFECT_RETURN_FLAG (*action)(Tile *tile, int& parameter);
 	RollingEffect() : next(0){}
-	RollingEffect(char* text) : RollingEffect()
+	RollingEffect(EFFECT_RETURN_FLAG (action)(Tile*,int&), int parameter) : RollingEffect()
 	{
-		print = text;
+		RollingEffect::action = action;
+		RollingEffect::parameter = parameter;
 	}
-
 };
 
 struct Tile : Entity {

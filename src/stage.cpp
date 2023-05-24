@@ -171,12 +171,25 @@ static void doRollingEffects()
 		; tile!=NULL
 		; tile = static_cast<Tile*>(tile->next))
 	{
+		RollingEffect *prev = &tile->rollingEffectHead;
 		RollingEffect *effect;
 		for (effect=tile->rollingEffectHead.next
 			; effect!=NULL
 			; effect=effect->next)
 		{
-			printf("%s\n", effect->print);
+			EFFECT_RETURN_FLAG flags = effect->action(tile, effect->parameter);
+			if (static_cast<uint8_t>(flags & EFFECT_RETURN_FLAG::END_EFFECT))
+			{
+				if (effect == tile->rollingEffectTail)
+				{
+					tile->rollingEffectTail=prev;
+				}
+				prev->next = effect->next;
+				free(effect);
+				effect = prev;
+			}
+
+			prev = effect;
 		}
 	}
 }
@@ -301,6 +314,21 @@ static void addRoundsToStage(First arg, const Rounds&... rest)
 	addRoundsToStage(rest...);
 }
 
+static EFFECT_RETURN_FLAG moveRightTen(Tile *tile, int& parameter){
+	if (parameter==10)
+	{
+		tile->dx = 4;
+	}
+	if (parameter==0)
+	{
+		tile->dx -= 4;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	printf("no flag back from effect \n");
+	parameter--;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
 static void initRounds(void)
 {
 	Round *round0 = new Round();
@@ -377,12 +405,11 @@ static void initRounds(void)
 
 	);
 
-	Tile *testTile = new Tile(0, 0, &redTile,
-		new RollingEffect("effect accessed 1\n"),
-		new RollingEffect("effect accessed 2\n"));
-
 	Round *round5 = new Round();
-	addTilesToRound(round5, testTile);
+	addTilesToRound(round5, 
+		new Tile(0, 0, &redTile),
+		new Tile(0, 1, &blueTile,
+			new RollingEffect(moveRightTen, 10)));
 
 	//addRoundsToStage(round0, round1, round2, round3, round4);
 	addRoundsToStage(round5);
