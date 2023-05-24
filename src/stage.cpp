@@ -40,6 +40,17 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
+static EFFECT_RETURN_FLAG moveLeftTwo(Tile *tile, double& parameter){
+	if (parameter==0)
+	{
+		tile->dx = 0;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	parameter--;
+	tile->dx = -2;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
 static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 {
 	return (tile1->tileType->tileInteraction(tile1, tile2));
@@ -101,6 +112,12 @@ static void doTileCollisions()
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
 				spawnTileFromCollision(tile, comparisonTile, &greyTile);
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_RIGHT))
+			{
+				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
+				tile->rollingEffectTail->next = effect;
+				tile->rollingEffectTail = effect;
 			}
 		}
 	}
@@ -314,21 +331,6 @@ static void addRoundsToStage(First arg, const Rounds&... rest)
 	addRoundsToStage(rest...);
 }
 
-static EFFECT_RETURN_FLAG moveRightTen(Tile *tile, int& parameter){
-	if (parameter==10)
-	{
-		tile->dx = 4;
-	}
-	if (parameter==0)
-	{
-		tile->dx -= 4;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
-	}
-	printf("no flag back from effect \n");
-	parameter--;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
 static void initRounds(void)
 {
 	Round *round0 = new Round();
@@ -408,8 +410,8 @@ static void initRounds(void)
 	Round *round5 = new Round();
 	addTilesToRound(round5, 
 		new Tile(0, 0, &redTile),
-		new Tile(0, 1, &blueTile,
-			new RollingEffect(moveRightTen, 10)));
+		new Tile(1, 1, &blueTile),
+		new Tile(2, 1, &blueTile));
 
 	//addRoundsToStage(round0, round1, round2, round3, round4);
 	addRoundsToStage(round5);
@@ -535,9 +537,26 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 
 	if (interactingTile->tileType->team == blueTile.team)
 	{
-		if (interactingTile->x == callingTile->x && interactingTile->y == callingTile->y)
+		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1;
+			int xDiff = callingTile->x - interactingTile->x;
+			int yDiff = callingTile->y - interactingTile->y;
+			if(xDiff<interactingTile->w)
+			{
+				return INTERACTION_FLAG::BOUNCE_RIGHT;
+			}
+			if(xDiff>-callingTile->w)
+			{
+				return INTERACTION_FLAG::BOUNCE_LEFT;
+			}
+			if(yDiff<interactingTile->h)
+			{
+				return INTERACTION_FLAG::BOUNCE_DOWN;
+			}
+			if(yDiff>-callingTile->h)
+			{
+				return INTERACTION_FLAG::BOUNCE_UP;
+			}
 		}
 	}
 	if (interactingTile->tileType->team == redTile.team)

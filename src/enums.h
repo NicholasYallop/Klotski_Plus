@@ -2,7 +2,11 @@ enum struct INTERACTION_FLAG : __uint8_t{
     NONE = 0,
     DESTROY_TILE1 = 1,
     DESTROY_TILE2 = 2,
-    SPAWN_GREY_TILE = 4
+    SPAWN_GREY_TILE = 4,
+    BOUNCE_RIGHT = 8,
+    BOUNCE_LEFT = 16,
+    BOUNCE_UP = 32,
+    BOUNCE_DOWN = 64
 };
 
 enum struct EFFECT_RETURN_FLAG : __uint8_t{

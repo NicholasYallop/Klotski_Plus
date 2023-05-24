@@ -34,10 +34,10 @@ struct RollingEffect;
 struct RollingEffect
 {
 	RollingEffect *next;
-	int parameter;
-	EFFECT_RETURN_FLAG (*action)(Tile *tile, int& parameter);
+	double parameter;
+	EFFECT_RETURN_FLAG (*action)(Tile *tile, double& parameter);
 	RollingEffect() : next(0){}
-	RollingEffect(EFFECT_RETURN_FLAG (action)(Tile*,int&), int parameter) : RollingEffect()
+	RollingEffect(EFFECT_RETURN_FLAG (action)(Tile*,double&), double parameter) : RollingEffect()
 	{
 		RollingEffect::action = action;
 		RollingEffect::parameter = parameter;
