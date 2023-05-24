@@ -377,15 +377,9 @@ static void initRounds(void)
 
 	);
 
-	Tile *testTile = new Tile(0, 0, &redTile);
-	RollingEffect *effect2 = new RollingEffect();
-	effect2->print ="effect accessed 1\n";
-	testTile->rollingEffectTail->next = effect2;
-	testTile->rollingEffectTail = effect2;
-	RollingEffect *effect = new RollingEffect();
-	effect->print ="effect accessed 2\n";
-	testTile->rollingEffectTail->next = effect;
-	testTile->rollingEffectTail = effect;
+	Tile *testTile = new Tile(0, 0, &redTile,
+		new RollingEffect("effect accessed 1\n"),
+		new RollingEffect("effect accessed 2\n"));
 
 	Round *round5 = new Round();
 	addTilesToRound(round5, testTile);

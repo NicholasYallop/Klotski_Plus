@@ -35,6 +35,12 @@ struct RollingEffect
 {
 	RollingEffect *next;
 	char* print;
+	RollingEffect() : next(0){}
+	RollingEffect(char* text) : RollingEffect()
+	{
+		print = text;
+	}
+
 };
 
 struct Tile : Entity {
@@ -51,6 +57,17 @@ struct Tile : Entity {
 		tileType = TileType;
 		texture = tileType->texture;
 		team = tileType->team;
+	}
+	Tile(int i, int j, TileType *tileType, RollingEffect *effect) : Tile(i, j, tileType)
+	{
+		rollingEffectTail->next = effect;
+		rollingEffectTail = effect;
+	}
+	template<typename First, typename ... Effects>
+	Tile(int i, int j, TileType *tileType, First arg, const Effects&... rest): Tile(i, j, tileType, rest...)
+	{
+		rollingEffectTail->next = arg;
+		rollingEffectTail = arg;
 	}
 };
 
