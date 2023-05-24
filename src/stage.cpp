@@ -11,6 +11,12 @@ static TileType greyTile;
 
 #pragma region tiles
 
+static void spawnTile(Tile *tile)
+{
+	stage.tileTail->next = tile;
+	stage.tileTail = tile;
+}
+
 static void spawnTile(int x, int y, TileType *tileType)
 {
 	Tile *newTile = new Tile();
@@ -160,15 +166,11 @@ static void destroyOutOfBoundsTiles(void)
 
 static void doRollingEffects()
 {
-	Tile *tile;
+	Tile *tile = new Tile();
 	for(tile=static_cast<Tile*>(stage.tileHead.next)
 		; tile!=NULL
 		; tile = static_cast<Tile*>(tile->next))
 	{
-		if (tile->rollingEffectHead.next == NULL)
-		{
-			printf("empty effect list for tile\n");
-		}
 		RollingEffect *effect;
 		for (effect=tile->rollingEffectHead.next
 			; effect!=NULL
@@ -201,11 +203,13 @@ static void addTilesToRound(Round *round, First arg, const Tiles&... rest)
 
 static void spawnRoundTiles(void)
 {
-	Entity *tile;
+	Tile *tile;
 
-	for (tile = currentRound->tileHead.next; tile != NULL; tile=tile->next)
+	for (tile = static_cast<Tile*>(currentRound->tileHead.next); 
+		tile != NULL; 
+		tile = static_cast<Tile*>(tile->next))
 	{
-		spawnTile(tile->x, tile->y, static_cast<Tile*>(tile)->tileType);
+		spawnTile(tile);
 	}
 }
 
@@ -375,11 +379,11 @@ static void initRounds(void)
 
 	Tile *testTile = new Tile(0, 0, &redTile);
 	RollingEffect *effect2 = new RollingEffect();
-	effect2->print ="effect accessed \n";
+	effect2->print ="effect accessed 1\n";
 	testTile->rollingEffectTail->next = effect2;
 	testTile->rollingEffectTail = effect2;
 	RollingEffect *effect = new RollingEffect();
-	effect->print ="effect accessed \n";
+	effect->print ="effect accessed 2\n";
 	testTile->rollingEffectTail->next = effect;
 	testTile->rollingEffectTail = effect;
 
