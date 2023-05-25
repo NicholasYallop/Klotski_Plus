@@ -13,23 +13,9 @@ static TileType greyTile;
 
 static void spawnTile(Tile *tile)
 {
-	stage.tileTail->next = tile;
-	stage.tileTail = tile;
-}
-
-static void spawnTile(int x, int y, TileType *tileType)
-{
-	Tile *newTile = new Tile();
-	
-	newTile->x = x;
-	newTile->y = y;
-	newTile->w = TILE_WIDTH;
-	newTile->h = TILE_HEIGHT;
-	newTile->texture = tileType->texture;
-	newTile->tileType = tileType;
-
-	stage.tileTail->next = newTile;
-	stage.tileTail = newTile;
+	Tile *deepCopy = new Tile(*tile);
+	stage.tileTail->next = deepCopy;
+	stage.tileTail = deepCopy;
 }
 
 static void spawnTileToGrid(int i, int j, TileType *tileType)
@@ -97,26 +83,8 @@ static void containingTile(int x, int y , int& i, int& j)
 
 static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 {
-	int contactX=0, contactY=0;
-	int xDiff = tile1->x - tile2->x;
-	if (xDiff >= 0)
-	{
-		contactX = tile1 -> x;
-	}
-	if (xDiff < 0)
-	{
-		contactX = tile2 -> x;
-	}
-
-	int yDiff = tile1->y - tile2->y;
-	if (yDiff >= 0)
-	{
-		contactY = tile1 -> y;
-	}
-	if (yDiff < 0)
-	{
-		contactY = tile2 -> y;
-	}
+	int contactX= std::max(tile1->x, tile2->x);
+	int contactY= std::max(tile1->y, tile2->y);
 
 	int i=0, j=0;
 	containingTile(contactX, contactY, i, j);
@@ -234,7 +202,7 @@ static void destroyOutOfBoundsTiles(void)
 
 static void doRollingEffects()
 {
-	Tile *tile = new Tile();
+	Tile *tile;
 	for(tile=static_cast<Tile*>(stage.tileHead.next)
 		; tile!=NULL
 		; tile = static_cast<Tile*>(tile->next))
@@ -465,8 +433,7 @@ static void initRounds(void)
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile));
 
-	//addRoundsToStage(round0, round1, round2, round3, round4);
-	addRoundsToStage(round5);
+	addRoundsToStage(round0, round1, round2, round3, round4, round5);
 }
 
 static void resetRound()
@@ -598,7 +565,7 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::SPAWN_GREY_TILE;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
 
@@ -625,7 +592,7 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
 

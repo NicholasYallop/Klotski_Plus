@@ -49,10 +49,26 @@ struct Tile : Entity {
 	RollingEffect rollingEffectHead, *rollingEffectTail;
 	bool toDestroy = false;
 	Tile() : Entity(), rollingEffectHead(), rollingEffectTail(&rollingEffectHead) {}
+	Tile(const Tile& tile) : Tile()
+	{
+		x = tile.x;
+		y = tile.y;
+		w = TILE_WIDTH;
+		h = TILE_HEIGHT;
+		tileType = tile.tileType;
+		texture = tileType->texture;
+		team = tileType->team;
+		RollingEffect *effect;
+		for(effect=tile.rollingEffectHead.next; effect!=NULL; effect=effect->next)
+		{
+			rollingEffectTail->next = effect;
+			rollingEffectTail = effect;
+		}
+	}
 	Tile(int i,  int j, TileType *TileType) : Tile() 
 	{
-		x = BOARD_SCREEN_OFFSET_X + (i+1)*BOARDPIECE_WIDTH - TILE_WIDTH;
-		y = BOARD_SCREEN_OFFSET_Y + (j+1)*BOARDPIECE_HEIGHT - TILE_HEIGHT;
+		x = BOARD_SCREEN_OFFSET_X + (i+0.5)*BOARDPIECE_WIDTH - 0.5*TILE_WIDTH;
+		y = BOARD_SCREEN_OFFSET_Y + (j+0.5)*BOARDPIECE_HEIGHT - 0.5*TILE_HEIGHT;
 		w = TILE_WIDTH;
 		h = TILE_HEIGHT;
 		tileType = TileType;
