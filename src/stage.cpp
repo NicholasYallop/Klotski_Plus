@@ -9,6 +9,7 @@ static TileType blueTile;
 static TileType redTile;
 static TileType greenTile;
 static TileType greyTile;
+static Tile tileQueueHead, *tileQueueTail= &tileQueueHead;
 
 #pragma region tiles
 
@@ -25,6 +26,34 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 
 	stage.tileTail->next = newTile;
 	stage.tileTail = newTile;
+}
+
+static void queueTileSpawnToGrid(int i, int j, TileType *tileType)
+{
+	Tile *newTile = new Tile(i, j, tileType);
+
+	tileQueueTail->next = newTile;
+	tileQueueTail = newTile;
+}
+
+static void queueTileSpawn(Tile *tile)
+{
+	Tile *deepCopy = new Tile(*tile);
+	tileQueueTail->next = deepCopy;
+	tileQueueTail = deepCopy;
+}
+
+static void spawnQueueTiles()
+{
+	Entity *tile;
+
+	while(tileQueueHead.next)
+	{
+		tile = tileQueueHead.next;
+		spawnTile(static_cast<Tile*>(tile));
+		tileQueueHead.next = tileQueueHead.next->next;
+		free(tile);
+	}
 }
 
 static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
@@ -110,14 +139,14 @@ static void containingTile(int x, int y , int& i, int& j)
 	j = std::floor((y-BOARD_SCREEN_OFFSET_Y)/BOARDPIECE_HEIGHT);
 }
 
-static void spawnTileFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
+static void queueTileSpawnFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 {
 	int contactX= std::max(tile1->x, tile2->x);
 	int contactY= std::max(tile1->y, tile2->y);
 
 	int i=0, j=0;
 	containingTile(contactX, contactY, i, j);
-	spawnTileToGrid(i, j, tileType);
+	queueTileSpawnToGrid(i, j, tileType);
 }
 
 static void doTileCollisions()
@@ -149,7 +178,10 @@ static void doTileCollisions()
 				comparisonTile->toDestroy = true;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
-				spawnTileFromCollision(tile, comparisonTile, &greyTile);
+				queueTileSpawnFromCollision(tile, comparisonTile, &greyTile);
+			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_GREEN_TILE)){
+				queueTileSpawnFromCollision(tile, comparisonTile, &greenTile);
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
@@ -220,6 +252,7 @@ static void doTileCollisions()
 
 		prev = tile;
 	}
+	spawnQueueTiles();
 }
 
 static int isOutsideBoard(Entity *entity)
@@ -632,6 +665,15 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
 		}
 	}
+	if (interactingTile->tileType->team == greenTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::SPAWN_GREEN_TILE
+				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
+					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+		}
+	}
 
 	return INTERACTION_FLAG::NONE;
 }
@@ -680,6 +722,26 @@ static void GreyClick(Tile *callingTile)
 
 static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTile)
 {
+	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
+					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+
+	if (interactingTile->tileType->team == greenTile.team)
+	{
+		if (collided)
+		{
+			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
+					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+		}
+	}
+	if (interactingTile->tileType->team == blueTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREEN_TILE
+				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
+					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+		}
+	}
 	return INTERACTION_FLAG::NONE;
 }
 
