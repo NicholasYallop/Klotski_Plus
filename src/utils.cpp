@@ -9,21 +9,22 @@ INTERACTION_FLAG bounce(int x1, int y1, int w1, int h1, int x2, int y2, int w2, 
 {
 	int xDiff = x1 - x2;
 	int yDiff = y1 - y2;
-	if(0<xDiff && xDiff<w2)
+	if(0<xDiff && xDiff<=w1)
 	{
-		return INTERACTION_FLAG::BOUNCE_RIGHT;
+		return INTERACTION_FLAG::BOUNCE_RIGHT_TILE1 | INTERACTION_FLAG::BOUNCE_LEFT_TILE2;
 	}
-	if(0>xDiff && xDiff>-w1)
+	if(0>xDiff && xDiff>=-w2)
 	{
-		return INTERACTION_FLAG::BOUNCE_LEFT;
+		return INTERACTION_FLAG::BOUNCE_LEFT_TILE1 | INTERACTION_FLAG::BOUNCE_RIGHT_TILE2;
 	}
-	if(0<yDiff && yDiff<h2)
+	if(0<yDiff && yDiff<=h1)
 	{
-		return INTERACTION_FLAG::BOUNCE_DOWN;
+		return INTERACTION_FLAG::BOUNCE_DOWN_TILE1 | INTERACTION_FLAG::BOUNCE_UP_TILE2;
 	}
-	if(0>yDiff && yDiff>-h1)
+	if(0>yDiff && yDiff>=-h2)
 	{
-		return INTERACTION_FLAG::BOUNCE_UP;
+		return INTERACTION_FLAG::BOUNCE_UP_TILE1 | INTERACTION_FLAG::BOUNCE_DOWN_TILE2;
 	}
+	printf("no bounce return\n");
 	return INTERACTION_FLAG::NONE;
 }

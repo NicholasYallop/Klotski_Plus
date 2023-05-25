@@ -105,39 +105,64 @@ static void doTileCollisions()
 
 			flags = doTileInteraction(tile, comparisonTile);
 
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
+			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				tile->toDestroy = true;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::DESTROY_TILE2)){
+			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE2)){
 				comparisonTile->toDestroy = true;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
+			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_GREY_TILE)){
 				spawnTileFromCollision(tile, comparisonTile, &greyTile);
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_RIGHT))
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
 				RollingEffect *effect = new RollingEffect(moveRightTwo, 5);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_LEFT))
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE1))
 			{
 				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_UP))
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE1))
 			{
 				RollingEffect *effect = new RollingEffect(moveUpTwo, 5);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
-			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_DOWN))
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE1))
 			{
 				RollingEffect *effect = new RollingEffect(moveDownTwo, 5);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE2))
+			{
+				RollingEffect *effect = new RollingEffect(moveRightTwo, 5);
+				comparisonTile->rollingEffectTail->next = effect;
+				comparisonTile->rollingEffectTail = effect;
+			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE2))
+			{
+				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
+				comparisonTile->rollingEffectTail->next = effect;
+				comparisonTile->rollingEffectTail = effect;
+			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE2))
+			{
+				RollingEffect *effect = new RollingEffect(moveUpTwo, 5);
+				comparisonTile->rollingEffectTail->next = effect;
+				comparisonTile->rollingEffectTail = effect;
+			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE2))
+			{
+				RollingEffect *effect = new RollingEffect(moveDownTwo, 5);
+				comparisonTile->rollingEffectTail->next = effect;
+				comparisonTile->rollingEffectTail = effect;
+			}
+		
 		}
 	}
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
