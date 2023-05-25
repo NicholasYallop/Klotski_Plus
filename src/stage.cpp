@@ -26,47 +26,75 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
-static EFFECT_RETURN_FLAG moveLeftTwo(Tile *tile, double& parameter){
-	if (parameter<=0)
+static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
+	if (parameter==0)
 	{
 		tile->dx = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	parameter--;
-	tile->dx = -2;
+	
+	if (parameter<=RECOIL_SPEED_X)
+	{
+		tile->dx = -parameter;
+		parameter = 0;
+		return EFFECT_RETURN_FLAG::NONE;
+	}
+	tile->dx = -RECOIL_SPEED_X;
+	parameter -= RECOIL_SPEED_X;
 	return EFFECT_RETURN_FLAG::NONE;
 }
 
-static EFFECT_RETURN_FLAG moveRightTwo(Tile *tile, double& parameter){
-	if (parameter<=0)
+static EFFECT_RETURN_FLAG realignRight(Tile *tile, double& parameter){
+	if (parameter==0)
 	{
 		tile->dx = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	parameter--;
-	tile->dx = 2;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
-static EFFECT_RETURN_FLAG moveDownTwo(Tile *tile, double& parameter){
-	if (parameter<=0)
+	
+	if (parameter<=RECOIL_SPEED_X)
 	{
-		tile->dx = 0;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
+		tile->dx = parameter;
+		parameter = 0;
+		return EFFECT_RETURN_FLAG::NONE;
 	}
-	parameter--;
-	tile->dy = 2;
+	tile->dx = RECOIL_SPEED_X;
+	parameter -= RECOIL_SPEED_X;
 	return EFFECT_RETURN_FLAG::NONE;
 }
 
-static EFFECT_RETURN_FLAG moveUpTwo(Tile *tile, double& parameter){
-	if (parameter<=0)
+static EFFECT_RETURN_FLAG realignDown(Tile *tile, double& parameter){
+	if (parameter==0)
 	{
 		tile->dy = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	parameter--;
-	tile->dy = -2;
+	
+	if (parameter<=RECOIL_SPEED_Y)
+	{
+		tile->dy = parameter;
+		parameter = 0;
+		return EFFECT_RETURN_FLAG::NONE;
+	}
+	tile->dy = RECOIL_SPEED_Y;
+	parameter -= RECOIL_SPEED_Y;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
+static EFFECT_RETURN_FLAG realignUp(Tile *tile, double& parameter){
+	if (parameter==0)
+	{
+		tile->dy = 0;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	
+	if (parameter<=RECOIL_SPEED_Y)
+	{
+		tile->dy = -parameter;
+		parameter = 0;
+		return EFFECT_RETURN_FLAG::NONE;
+	}
+	tile->dy = -RECOIL_SPEED_Y;
+	parameter -= RECOIL_SPEED_Y;
 	return EFFECT_RETURN_FLAG::NONE;
 }
 
@@ -95,7 +123,7 @@ static void doTileCollisions()
 {
 	Tile *tile;
 	Tile *comparisonTile;
-	Tile *prev = &stage.tileHead;
+	Tile *prev = &stage.tileHead; 
 
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
@@ -104,7 +132,15 @@ static void doTileCollisions()
 			INTERACTION_FLAG flags;
 
 			flags = doTileInteraction(tile, comparisonTile);
-
+			int tileRealignX, tileRealignY;
+			int i, j;
+			containingTile(tile->x + tile->w/2, tile->y + tile->h/2, i, j);
+			tileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
+			tileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
+			int comparisonTileRealignX, comparisonTileRealignY;
+			containingTile(comparisonTile->x + comparisonTile->w/2, comparisonTile->y + comparisonTile->h/2, i, j);
+			comparisonTileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
+			comparisonTileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
 			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				tile->toDestroy = true;
 			}
@@ -116,49 +152,53 @@ static void doTileCollisions()
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(moveRightTwo, 5);
+				printf("tile right: %i\n", tileRealignX - tile->x);
+				RollingEffect *effect = new RollingEffect(realignRight, tileRealignX - tile->x);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
+				printf("tile left: %i\n", tile->x - tileRealignX);
+				RollingEffect *effect = new RollingEffect(realignLeft, tile->x - tileRealignX);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(moveUpTwo, 5);
+				RollingEffect *effect = new RollingEffect(realignUp, tile->y - tileRealignY);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(moveDownTwo, 5);
+				RollingEffect *effect = new RollingEffect(realignDown, tileRealignY - tile->y);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(moveRightTwo, 5);
+				printf("comparison right: %i\n", comparisonTileRealignX - comparisonTile->x);
+				RollingEffect *effect = new RollingEffect(realignRight, comparisonTileRealignX - comparisonTile->x);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
+				printf("comparison left: %i\n", comparisonTile->x - comparisonTileRealignX);//comparisonTileRealignX - comparisonTile->x);
+				RollingEffect *effect = new RollingEffect(realignLeft, comparisonTile->x - comparisonTileRealignX);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(moveUpTwo, 5);
+				RollingEffect *effect = new RollingEffect(realignUp, comparisonTile->y - comparisonTileRealignY);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(moveDownTwo, 5);
+				RollingEffect *effect = new RollingEffect(realignDown, comparisonTileRealignY - comparisonTile->y);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
@@ -453,12 +493,12 @@ static void initRounds(void)
 
 	Round *round5 = new Round();
 	addTilesToRound(round5, 
-		new Tile(0, 0, &redTile),
 		new Tile(0, 1, &redTile),
+		new Tile(0, 0, &redTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile));
 
-	addRoundsToStage(round0, round1, round2, round3, round4, round5);
+	addRoundsToStage(/*round0, round1, round2, round3, round4,*/ round5);
 }
 
 static void resetRound()

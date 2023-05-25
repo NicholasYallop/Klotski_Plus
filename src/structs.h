@@ -4,7 +4,7 @@
 struct Entity;
 
 struct Entity {
-	float x, y;
+	int x, y;
 	int w, h;
 	float dx, dy;
 	int team;
@@ -15,7 +15,7 @@ struct Entity {
 struct BoardPiece;
 
 struct BoardPiece {
-	float x, y;
+	int x, y;
 	int w, h;
 	SDL_Texture *texture;
 	BoardPiece *next;
