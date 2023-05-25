@@ -50,7 +50,6 @@ static void spawnQueueTiles()
 	while(tileQueueHead.next)
 	{
 		tile = tileQueueHead.next;
-		printf("got here \n");
 		spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
 		free(tile);
@@ -61,13 +60,14 @@ static void spawnQueueTiles()
 static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
 	if (parameter==0)
 	{
+		tile->isRealigning = false;
 		tile->dx = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	
+	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_X)
 	{
-		tile->dx = -parameter;
+		tile->dx = - int(parameter);
 		parameter = 0;
 		return EFFECT_RETURN_FLAG::NONE;
 	}
@@ -79,10 +79,11 @@ static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
 static EFFECT_RETURN_FLAG realignRight(Tile *tile, double& parameter){
 	if (parameter==0)
 	{
+		tile->isRealigning = false;
 		tile->dx = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	
+	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_X)
 	{
 		tile->dx = parameter;
@@ -97,10 +98,11 @@ static EFFECT_RETURN_FLAG realignRight(Tile *tile, double& parameter){
 static EFFECT_RETURN_FLAG realignDown(Tile *tile, double& parameter){
 	if (parameter==0)
 	{
+		tile->isRealigning = false;
 		tile->dy = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	
+	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_Y)
 	{
 		tile->dy = parameter;
@@ -115,10 +117,11 @@ static EFFECT_RETURN_FLAG realignDown(Tile *tile, double& parameter){
 static EFFECT_RETURN_FLAG realignUp(Tile *tile, double& parameter){
 	if (parameter==0)
 	{
+		tile->isRealigning = false;
 		tile->dy = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
-	
+	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_Y)
 	{
 		tile->dy = -parameter;
@@ -183,7 +186,22 @@ static void doTileCollisions()
 				queueTileSpawnFromCollision(tile, comparisonTile, &greyTile);
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_GREEN_TILE)){
-				queueTileSpawnFromCollision(tile, comparisonTile, &greenTile);
+				Tile *green = new Tile(0, 0, &greenTile);
+				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1))
+				{
+					green->x = tile->x;
+					green->y = tile->y;
+					queueTileSpawn(green);
+				}
+				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE2))
+				{
+					green->x = comparisonTile->x;
+					green->y = comparisonTile->y;
+					queueTileSpawn(green);
+				}
+			}
+			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_RED_TILE)){
+				queueTileSpawnFromCollision(tile, comparisonTile, &redTile);
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
@@ -232,8 +250,7 @@ static void doTileCollisions()
 				RollingEffect *effect = new RollingEffect(realignDown, comparisonTileRealignY - comparisonTile->y);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
-			}
-		
+			}		
 		}
 	}
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
@@ -361,13 +378,14 @@ static void spawnRoundTiles(void)
 
 static void doTileClicks(int xMouse, int yMouse)
 {
-	Entity *tile;
+	Tile *tile;
 
-		for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+		for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 		{
-			if (collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
+			if (!tile->isRealigning
+				&& collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
 			{
-				static_cast<Tile*>(tile)->tileType->clickInteraction(static_cast<Tile*>(tile));
+				tile->tileType->clickInteraction(tile);
 			}
 		}
 }
@@ -462,6 +480,7 @@ static void initRounds(void)
 		new Tile(0, 0, &blueTile),
 		new Tile(1, 0, &redTile),
 		new Tile(2, 0, &redTile),
+		new Tile(3, 0, &redTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile)
 	);
@@ -525,14 +544,35 @@ static void initRounds(void)
 
 	Round *round5 = new Round();
 	addTilesToRound(round5, 
-		new Tile(0, 1, &redTile),
 		new Tile(0, 0, &redTile),
+		new Tile(0, 1, &blueTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile),
 		new Tile(3, 1, &greenTile),
 		new Tile(4, 1, &greenTile));
 
-	addRoundsToStage(/*round0, round1, round2, round3, round4,*/ round5);
+	Round *round6 = new Round();
+	addTilesToRound(round6,
+		new Tile(5, 1, &redTile),
+		new Tile(6, 1, &redTile),
+		new Tile(5, 2, &blueTile),
+		new Tile(6, 2, &greenTile),
+		new Tile(5, 3, &blueTile),
+		new Tile(6, 3, &blueTile));
+
+	Round *round7 = new Round();
+	addTilesToRound(round7,
+		new Tile(5, 1, &redTile),
+		new Tile(6, 1, &redTile),
+		new Tile(4, 2, &blueTile),
+		new Tile(5, 2, &greenTile),
+		new Tile(6, 2, &blueTile),
+		new Tile(5, 3, &redTile),
+		new Tile(6, 3, &blueTile),
+		new Tile(5, 4, &blueTile),
+		new Tile(6, 4, &greenTile));
+
+	addRoundsToStage(round0, round1, round2, round3, round4, round5, round6, round7);
 }
 
 static void resetRound()
@@ -649,6 +689,16 @@ static void quit()
 
 #pragma region Colours
 
+static INTERACTION_FLAG GreyInteractions(Tile *callingTile, Tile *interactingTile)
+{
+	return INTERACTION_FLAG::NONE;
+}
+
+static void GreyClick(Tile *callingTile)
+{
+	return;
+}
+
 static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTile)
 {
 	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
@@ -700,7 +750,14 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
+		}
+	}
+	if (interactingTile->tileType->team == greenTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_RED_TILE;
 		}
 	}
 
@@ -710,16 +767,6 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 static void RedClick(Tile *callingTile)
 {
 	callingTile->dy = CLICK_SPEED_Y;
-}
-
-static INTERACTION_FLAG GreyInteractions(Tile *callingTile, Tile *interactingTile)
-{
-	return INTERACTION_FLAG::NONE;
-}
-
-static void GreyClick(Tile *callingTile)
-{
-	return;
 }
 
 static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTile)
@@ -739,9 +786,16 @@ static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTi
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE2 //| INTERACTION_FLAG::SPAWN_GREEN_TILE
+			return INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREEN_TILE
 				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
 					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+		}
+	}
+	if (interactingTile->tileType->team == redTile.team)
+	{
+		if (collided)
+		{
+			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_RED_TILE;
 		}
 	}
 	return INTERACTION_FLAG::NONE;
@@ -785,9 +839,9 @@ static void logic(void)
 {
 	doTileCollisions();
 
-	doClicks();
-
 	doTiles();
+	
+	doClicks();
 
 	if (stage.tileHead.next == NULL)
 	{

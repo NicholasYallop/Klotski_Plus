@@ -47,7 +47,7 @@ struct RollingEffect
 struct Tile : Entity {
 	TileType *tileType;
 	RollingEffect rollingEffectHead, *rollingEffectTail;
-	bool toDestroy = false;
+	bool toDestroy = false, isRealigning = false;
 	Tile() : Entity(), rollingEffectHead(), rollingEffectTail(&rollingEffectHead) {}
 	Tile(const Tile& tile) : Tile()
 	{

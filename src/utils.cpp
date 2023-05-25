@@ -25,6 +25,6 @@ INTERACTION_FLAG bounce(int x1, int y1, int w1, int h1, int x2, int y2, int w2, 
 	{
 		return INTERACTION_FLAG::BOUNCE_UP_TILE1 | INTERACTION_FLAG::BOUNCE_DOWN_TILE2;
 	}
-	printf("no bounce return\n");
+	printf("no bounce return | xDiff=%i ; yDiff=%i\n", xDiff, yDiff);
 	return INTERACTION_FLAG::NONE;
 }
