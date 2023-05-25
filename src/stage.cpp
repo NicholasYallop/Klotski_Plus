@@ -41,13 +41,46 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 }
 
 static EFFECT_RETURN_FLAG moveLeftTwo(Tile *tile, double& parameter){
-	if (parameter==0)
+	if (parameter<=0)
 	{
 		tile->dx = 0;
 		return EFFECT_RETURN_FLAG::END_EFFECT;
 	}
 	parameter--;
 	tile->dx = -2;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
+static EFFECT_RETURN_FLAG moveRightTwo(Tile *tile, double& parameter){
+	if (parameter<=0)
+	{
+		tile->dx = 0;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	parameter--;
+	tile->dx = 2;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
+static EFFECT_RETURN_FLAG moveDownTwo(Tile *tile, double& parameter){
+	if (parameter<=0)
+	{
+		tile->dx = 0;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	parameter--;
+	tile->dy = 2;
+	return EFFECT_RETURN_FLAG::NONE;
+}
+
+static EFFECT_RETURN_FLAG moveUpTwo(Tile *tile, double& parameter){
+	if (parameter<=0)
+	{
+		tile->dy = 0;
+		return EFFECT_RETURN_FLAG::END_EFFECT;
+	}
+	parameter--;
+	tile->dy = -2;
 	return EFFECT_RETURN_FLAG::NONE;
 }
 
@@ -115,7 +148,25 @@ static void doTileCollisions()
 			}
 			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_RIGHT))
 			{
+				RollingEffect *effect = new RollingEffect(moveRightTwo, 5);
+				tile->rollingEffectTail->next = effect;
+				tile->rollingEffectTail = effect;
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_LEFT))
+			{
 				RollingEffect *effect = new RollingEffect(moveLeftTwo, 5);
+				tile->rollingEffectTail->next = effect;
+				tile->rollingEffectTail = effect;
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_UP))
+			{
+				RollingEffect *effect = new RollingEffect(moveUpTwo, 5);
+				tile->rollingEffectTail->next = effect;
+				tile->rollingEffectTail = effect;
+			}
+			if (static_cast<uint8_t>(flags & INTERACTION_FLAG::BOUNCE_DOWN))
+			{
+				RollingEffect *effect = new RollingEffect(moveDownTwo, 5);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
@@ -410,6 +461,7 @@ static void initRounds(void)
 	Round *round5 = new Round();
 	addTilesToRound(round5, 
 		new Tile(0, 0, &redTile),
+		new Tile(0, 1, &redTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile));
 
@@ -539,24 +591,7 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 	{
 		if (collided)
 		{
-			int xDiff = callingTile->x - interactingTile->x;
-			int yDiff = callingTile->y - interactingTile->y;
-			if(xDiff<interactingTile->w)
-			{
-				return INTERACTION_FLAG::BOUNCE_RIGHT;
-			}
-			if(xDiff>-callingTile->w)
-			{
-				return INTERACTION_FLAG::BOUNCE_LEFT;
-			}
-			if(yDiff<interactingTile->h)
-			{
-				return INTERACTION_FLAG::BOUNCE_DOWN;
-			}
-			if(yDiff>-callingTile->h)
-			{
-				return INTERACTION_FLAG::BOUNCE_UP;
-			}
+			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
 		}
 	}
 	if (interactingTile->tileType->team == redTile.team)
@@ -579,6 +614,13 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 {
 	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
 
+	if (interactingTile->tileType->team == redTile.team)
+	{
+		if (collided)
+		{
+			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
+		}
+	}
 	if (interactingTile->tileType->team == blueTile.team)
 	{
 		if (collided)
