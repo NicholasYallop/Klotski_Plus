@@ -99,7 +99,6 @@ void blitInBoard(SDL_Texture *texture, int x, int y, int w, int h)
 	dest.y = y;
 	dest.w = w;
 	dest.h = h;
-
 	if (dest.x < BOARD_SCREEN_OFFSET_X)
 	{
 		source.x = BOARD_SCREEN_OFFSET_X;

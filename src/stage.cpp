@@ -7,6 +7,7 @@ static Round *currentRound;
 static SDL_Texture *boardPieceTexture;
 static TileType blueTile;
 static TileType redTile;
+static TileType greenTile;
 static TileType greyTile;
 
 #pragma region tiles
@@ -492,7 +493,9 @@ static void initRounds(void)
 		new Tile(0, 1, &redTile),
 		new Tile(0, 0, &redTile),
 		new Tile(1, 1, &blueTile),
-		new Tile(2, 1, &blueTile));
+		new Tile(2, 1, &blueTile),
+		new Tile(3, 1, &greenTile),
+		new Tile(4, 1, &greenTile));
 
 	addRoundsToStage(/*round0, round1, round2, round3, round4,*/ round5);
 }
@@ -635,7 +638,7 @@ static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTil
 
 static void BlueClick(Tile *callingTile)
 {
-	callingTile->dx = 4;
+	callingTile->dx = CLICK_SPEED_X;
 }
 
 static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile)
@@ -662,21 +665,37 @@ static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile
 
 static void RedClick(Tile *callingTile)
 {
-	callingTile->dy = 4;
+	callingTile->dy = CLICK_SPEED_Y;
 }
 
-static INTERACTION_FLAG greyInteractions(Tile *callingTile, Tile *interactingTile)
+static INTERACTION_FLAG GreyInteractions(Tile *callingTile, Tile *interactingTile)
 {
 	return INTERACTION_FLAG::NONE;
 }
 
-static void greyClick(Tile *callingTile)
+static void GreyClick(Tile *callingTile)
 {
 	return;
 }
 
+static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTile)
+{
+	return INTERACTION_FLAG::NONE;
+}
+
+static void GreenClick(Tile *callingTile)
+{
+	callingTile->dx = -CLICK_SPEED_X;
+}
+
 static void initColours(void)
 {
+	greyTile = TileType();
+	greyTile.team = 0;
+	greyTile.texture = loadTexture("gfx/grey.png");
+	greyTile.tileInteraction = GreyInteractions;
+	greyTile.clickInteraction = GreyClick;
+
 	blueTile = TileType();
 	blueTile.team = 1;
 	blueTile.texture = loadTexture("gfx/blue.png");
@@ -689,11 +708,11 @@ static void initColours(void)
 	redTile.tileInteraction = RedInteractions;
 	redTile.clickInteraction = RedClick;
 
-	greyTile = TileType();
-	greyTile.team = 3;
-	greyTile.texture = loadTexture("gfx/grey.png");
-	greyTile.tileInteraction = greyInteractions;
-	greyTile.clickInteraction = greyClick;
+	greenTile = TileType();
+	greenTile.team = 3;
+	greenTile.texture = loadTexture("gfx/green.jpg");
+	greenTile.tileInteraction = GreenInteractions;
+	greenTile.clickInteraction = GreenClick;
 }
 
 #pragma endregion Colours
