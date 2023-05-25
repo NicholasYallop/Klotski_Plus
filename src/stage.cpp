@@ -50,10 +50,12 @@ static void spawnQueueTiles()
 	while(tileQueueHead.next)
 	{
 		tile = tileQueueHead.next;
+		printf("got here \n");
 		spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
 		free(tile);
 	}
+	tileQueueTail = &tileQueueHead;
 }
 
 static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
@@ -737,7 +739,7 @@ static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTi
 	{
 		if (collided)
 		{
-			return INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREEN_TILE
+			return INTERACTION_FLAG::DESTROY_TILE2 //| INTERACTION_FLAG::SPAWN_GREEN_TILE
 				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
 					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
 		}
