@@ -152,14 +152,12 @@ static void doTileCollisions()
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
-				printf("tile right: %i\n", tileRealignX - tile->x);
 				RollingEffect *effect = new RollingEffect(realignRight, tileRealignX - tile->x);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE1))
 			{
-				printf("tile left: %i\n", tile->x - tileRealignX);
 				RollingEffect *effect = new RollingEffect(realignLeft, tile->x - tileRealignX);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
@@ -178,14 +176,12 @@ static void doTileCollisions()
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE2))
 			{
-				printf("comparison right: %i\n", comparisonTileRealignX - comparisonTile->x);
 				RollingEffect *effect = new RollingEffect(realignRight, comparisonTileRealignX - comparisonTile->x);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE2))
 			{
-				printf("comparison left: %i\n", comparisonTile->x - comparisonTileRealignX);//comparisonTileRealignX - comparisonTile->x);
 				RollingEffect *effect = new RollingEffect(realignLeft, comparisonTile->x - comparisonTileRealignX);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
