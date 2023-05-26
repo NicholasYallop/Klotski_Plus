@@ -15,8 +15,8 @@
 #define TILE_WIDTH 90
 #define TILE_HEIGHT 90
 
-#define CLICK_SPEED_X 4
-#define CLICK_SPEED_Y 4
+#define CLICK_SPEED_X 5
+#define CLICK_SPEED_Y 5
 #define RECOIL_SPEED_X 2
 #define RECOIL_SPEED_Y 2
 
