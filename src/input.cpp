@@ -35,10 +35,12 @@ void doMouseUp(SDL_MouseButtonEvent *event)
 	if (event->button == SDL_BUTTON_LEFT)
 	{
 		app.leftClickActive = 0;
+		app.leftClickHeld = 0;
 	}
 	if (event->button == SDL_BUTTON_RIGHT)
 	{
 		app.rightClickActive = 0;
+		app.rightClickHeld = 0;
 	}
 }
 
@@ -47,6 +49,14 @@ void doInput(void)
 	SDL_Event event;
 
 	bool mouseDown = false;
+	if (app.leftClickActive)
+	{
+		app.leftClickHeld = 1;
+	}
+	if (app.rightClickActive)
+	{
+		app.rightClickHeld = 1;
+	}
 
 	while (SDL_PollEvent(&event))
 	{

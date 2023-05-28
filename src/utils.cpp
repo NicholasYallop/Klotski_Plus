@@ -2,7 +2,13 @@
 
 int collision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
-	return (std::max(x1, x2) < std::min(x1 + w1, x2 + w2)) && (std::max(y1, y2) < std::min(y1 + h1, y2 + h2));
+	bool test = std::max(x1, x2) < std::min(x1 + w1, x2 + w2) && (std::max(y1, y2) < std::min(y1 + h1, y2 + h2));
+	if (test)
+	{
+		printf("collision | x1=%i ; y1=%i; x2=%i ; y2=%i\n", x1, y1, x2, y2);
+		return true;
+	}
+	return false;
 }
 
 INTERACTION_FLAG bounce(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)

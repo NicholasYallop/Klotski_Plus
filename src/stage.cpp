@@ -47,8 +47,10 @@ static void spawnQueueTiles()
 {
 	Entity *tile;
 
+	int i = 0;
 	while(tileQueueHead.next)
 	{
+		printf("got here %i\n", i++);
 		tile = tileQueueHead.next;
 		spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
@@ -86,7 +88,7 @@ static EFFECT_RETURN_FLAG realignRight(Tile *tile, double& parameter){
 	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_X)
 	{
-		tile->dx = parameter;
+		tile->dx = int(parameter);
 		parameter = 0;
 		return EFFECT_RETURN_FLAG::NONE;
 	}
@@ -105,7 +107,7 @@ static EFFECT_RETURN_FLAG realignDown(Tile *tile, double& parameter){
 	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_Y)
 	{
-		tile->dy = parameter;
+		tile->dy = int(parameter);
 		parameter = 0;
 		return EFFECT_RETURN_FLAG::NONE;
 	}
@@ -124,7 +126,7 @@ static EFFECT_RETURN_FLAG realignUp(Tile *tile, double& parameter){
 	tile->isRealigning = true;
 	if (parameter<=RECOIL_SPEED_Y)
 	{
-		tile->dy = -parameter;
+		tile->dy = -int(parameter);
 		parameter = 0;
 		return EFFECT_RETURN_FLAG::NONE;
 	}
@@ -158,7 +160,6 @@ static void doTileCollisions()
 {
 	Tile *tile;
 	Tile *comparisonTile;
-	Tile *prev = &stage.tileHead; 
 
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
@@ -176,6 +177,10 @@ static void doTileCollisions()
 			containingTile(comparisonTile->x + comparisonTile->w/2, comparisonTile->y + comparisonTile->h/2, i, j);
 			comparisonTileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
 			comparisonTileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
+			if (static_cast<int>(flags))
+			{
+				printf("interaction occured | flag:%i \n", static_cast<int>(flags));
+			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				tile->toDestroy = true;
 			}
@@ -189,14 +194,14 @@ static void doTileCollisions()
 				Tile *green = new Tile(0, 0, &greenTile);
 				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1))
 				{
-					green->x = tile->x;
-					green->y = tile->y;
+					green->x = int(tile->x);
+					green->y = int(tile->y);
 					queueTileSpawn(green);
 				}
 				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE2))
 				{
-					green->x = comparisonTile->x;
-					green->y = comparisonTile->y;
+					green->x = int(comparisonTile->x);
+					green->y = int(comparisonTile->y);
 					queueTileSpawn(green);
 				}
 			}
@@ -253,6 +258,8 @@ static void doTileCollisions()
 			}		
 		}
 	}
+
+	Tile *prev = &stage.tileHead; 
 	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
 		if (tile->toDestroy)
@@ -260,6 +267,10 @@ static void doTileCollisions()
 			if (tile == stage.tileTail)
 			{
 				stage.tileTail = prev;
+			}
+			if (tile == stage.tileTail)
+			{
+				stage.tileTail = static_cast<Tile*>(prev);
 			}
 
 			prev->next = tile->next;
@@ -271,7 +282,6 @@ static void doTileCollisions()
 
 		prev = tile;
 	}
-	spawnQueueTiles();
 }
 
 static int isOutsideBoard(Entity *entity)
@@ -297,8 +307,11 @@ static void destroyOutOfBoundsTiles(void)
 			{
 				stage.tileHead.next = tile->next;
 			}
-
-			prev->next = tile -> next;
+			if (tile == stage.tileTail)
+			{
+				stage.tileTail = static_cast<Tile*>(prev);
+			}
+			prev->next = tile->next;
 
 			free(tile);
 
@@ -330,6 +343,10 @@ static void doRollingEffects()
 			EFFECT_RETURN_FLAG flags = effect->action(tile, effect->parameter);
 			if (static_cast<uint8_t>(flags & EFFECT_RETURN_FLAG::END_EFFECT))
 			{
+				if (effect == tile->rollingEffectHead.next)
+				{
+					tile->rollingEffectHead.next = effect->next;
+				}
 				if (effect == tile->rollingEffectTail)
 				{
 					tile->rollingEffectTail=prev;
@@ -346,6 +363,14 @@ static void doRollingEffects()
 
 static void doTiles(void)
 {
+	Entity *tile;
+	int i =0;
+	for (tile = stage.tileHead.next
+		; tile != NULL
+		; tile= tile->next)
+		{
+			printf("tile %i | x:%i y:%i dx:%i dy:%i\n", i++, tile->x, tile->y, tile->dx, tile->dy);
+		}
 	destroyOutOfBoundsTiles();
 	doRollingEffects();
 }
@@ -367,12 +392,11 @@ static void addTilesToRound(Round *round, First arg, const Tiles&... rest)
 static void spawnRoundTiles(void)
 {
 	Tile *tile;
-
 	for (tile = static_cast<Tile*>(currentRound->tileHead.next); 
 		tile != NULL; 
 		tile = static_cast<Tile*>(tile->next))
 	{
-		spawnTile(tile);
+		queueTileSpawn(tile);
 	}
 }
 
@@ -572,7 +596,7 @@ static void initRounds(void)
 		new Tile(5, 4, &blueTile),
 		new Tile(6, 4, &greenTile));
 
-	addRoundsToStage(round0, round1, round2, round3, round4, round5, round6, round7);
+	addRoundsToStage(/*round0, round1, round2, round3, round4,*/ round5, round6, round7);
 }
 
 static void resetRound()
@@ -650,7 +674,7 @@ static void initButtons()
 
 static void doClicks()
 {
-	if (app.leftClickActive)
+	if (app.leftClickActive && !app.leftClickHeld)
 	{
 		int x, y;
 		SDL_GetMouseState(&x, &y);
@@ -837,11 +861,13 @@ static void initColours(void)
 
 static void logic(void)
 {
-	doTileCollisions();
+	doClicks();
 
 	doTiles();
-	
-	doClicks();
+
+	doTileCollisions();
+
+	spawnQueueTiles();
 
 	if (stage.tileHead.next == NULL)
 	{

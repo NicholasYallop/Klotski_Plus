@@ -6,10 +6,11 @@ struct Entity;
 struct Entity {
 	int x, y;
 	int w, h;
-	float dx, dy;
+	int dx, dy;
 	int team;
 	SDL_Texture *texture;
 	Entity *next;
+	Entity() : next(nullptr){}
 };
 
 struct BoardPiece;
@@ -48,13 +49,17 @@ struct Tile : Entity {
 	TileType *tileType;
 	RollingEffect rollingEffectHead, *rollingEffectTail;
 	bool toDestroy = false, isRealigning = false;
-	Tile() : Entity(), rollingEffectHead(), rollingEffectTail(&rollingEffectHead) {}
+	Tile() : 
+		Entity(), 
+		rollingEffectHead(), rollingEffectTail(&rollingEffectHead){}
 	Tile(const Tile& tile) : Tile()
 	{
 		x = tile.x;
 		y = tile.y;
 		w = TILE_WIDTH;
 		h = TILE_HEIGHT;
+		dx = tile.dx;
+		dy = tile.dy;
 		tileType = tile.tileType;
 		texture = tileType->texture;
 		team = tileType->team;
@@ -120,4 +125,5 @@ typedef struct {
 	Delegate delegate;
 	int keyboard[MAX_KEYBOARD_KEYS];
 	int leftClickActive, rightClickActive;
+	int leftClickHeld, rightClickHeld;
 } App;
