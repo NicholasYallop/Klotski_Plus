@@ -50,7 +50,6 @@ static void spawnQueueTiles()
 	int i = 0;
 	while(tileQueueHead.next)
 	{
-		printf("got here %i\n", i++);
 		tile = tileQueueHead.next;
 		spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
@@ -177,10 +176,6 @@ static void doTileCollisions()
 			containingTile(comparisonTile->x + comparisonTile->w/2, comparisonTile->y + comparisonTile->h/2, i, j);
 			comparisonTileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
 			comparisonTileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
-			if (static_cast<int>(flags))
-			{
-				printf("interaction occured | flag:%i \n", static_cast<int>(flags));
-			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
 				tile->toDestroy = true;
 			}
@@ -363,14 +358,6 @@ static void doRollingEffects()
 
 static void doTiles(void)
 {
-	Entity *tile;
-	int i =0;
-	for (tile = stage.tileHead.next
-		; tile != NULL
-		; tile= tile->next)
-		{
-			printf("tile %i | x:%i y:%i dx:%i dy:%i\n", i++, tile->x, tile->y, tile->dx, tile->dy);
-		}
 	destroyOutOfBoundsTiles();
 	doRollingEffects();
 }
