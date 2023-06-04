@@ -9,7 +9,7 @@ static TileType blueTile;
 static TileType redTile;
 static TileType greenTile;
 static TileType greyTile;
-static Tile tileQueueHead, *tileQueueTail= &tileQueueHead;
+static Tile tileQueueHead, *tileQueueTail=&tileQueueHead;
 
 #pragma region tiles
 
@@ -47,7 +47,6 @@ static void spawnQueueTiles()
 {
 	Entity *tile;
 
-	int i = 0;
 	while(tileQueueHead.next)
 	{
 		tile = tileQueueHead.next;
@@ -583,7 +582,7 @@ static void initRounds(void)
 		new Tile(5, 4, &blueTile),
 		new Tile(6, 4, &greenTile));
 
-	addRoundsToStage(/*round0, round1, round2, round3, round4,*/ round5, round6, round7);
+	addRoundsToStage(round0, round1, round2, round3, round4, round5, round6, round7);
 }
 
 static void resetRound()
@@ -879,7 +878,7 @@ void initStage(void)
 	app.delegate.draw = draw;
 
 	stage = Stage();
-	// can't do linked list initialisation in constructor as stage is static
+	// don't think we can do linked list initialisation in constructor as stage is static
 	stage.roundTail = &stage.roundHead;
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;

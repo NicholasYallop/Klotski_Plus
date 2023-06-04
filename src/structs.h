@@ -70,12 +70,13 @@ struct Tile : Entity {
 			rollingEffectTail = effect;
 		}
 	}
-	Tile(int i,  int j, TileType *TileType) : Tile() 
+	Tile(int i,  int j, TileType *TileType) : Tile()
 	{
 		x = BOARD_SCREEN_OFFSET_X + (i+0.5)*BOARDPIECE_WIDTH - 0.5*TILE_WIDTH;
 		y = BOARD_SCREEN_OFFSET_Y + (j+0.5)*BOARDPIECE_HEIGHT - 0.5*TILE_HEIGHT;
 		w = TILE_WIDTH;
 		h = TILE_HEIGHT;
+		dx = dy = 0;
 		tileType = TileType;
 		texture = tileType->texture;
 		team = tileType->team;
