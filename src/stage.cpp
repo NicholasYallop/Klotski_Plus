@@ -140,8 +140,8 @@ static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
 
 static void containingTile(int x, int y , int& i, int& j)
 {
-	i = std::floor((x-BOARD_SCREEN_OFFSET_X)/BOARDPIECE_WIDTH);
-	j = std::floor((y-BOARD_SCREEN_OFFSET_Y)/BOARDPIECE_HEIGHT);
+	i = floor((x-BOARD_SCREEN_OFFSET_X)/BOARDPIECE_WIDTH);
+	j = floor((y-BOARD_SCREEN_OFFSET_Y)/BOARDPIECE_HEIGHT);
 }
 
 static void queueTileSpawnFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)

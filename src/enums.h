@@ -16,7 +16,7 @@ enum struct INTERACTION_FLAG : int{
     SPAWN_RED_TILE = 8192
 };
 
-enum struct EFFECT_RETURN_FLAG : __uint8_t{
+enum struct EFFECT_RETURN_FLAG : Uint8{
     NONE = 0,
     END_EFFECT = 1
 };

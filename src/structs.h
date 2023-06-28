@@ -1,4 +1,4 @@
-#include "SDL2/SDL.h"
+#include "SDL.h"
 #include "enums.h"
 
 struct Entity;
@@ -10,7 +10,9 @@ struct Entity {
 	int team;
 	SDL_Texture *texture;
 	Entity *next;
-	Entity() : next(nullptr){}
+	Entity() : next(nullptr){
+		x = y = w = h = dx = dy = team = 0;
+	}
 };
 
 struct BoardPiece;
