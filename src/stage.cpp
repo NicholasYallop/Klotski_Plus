@@ -459,8 +459,8 @@ static void doBoardPieces() {
 
 	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next) {
 		for (boardpiece = stage.pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
-			if ((boardpiece->x - tile->x == BOARDPIECE_WIDTH - TILE_WIDTH) &&
-				(boardpiece->y - tile->y == BOARDPIECE_HEIGHT - TILE_HEIGHT)) 
+			if ((std::abs((tile->x - boardpiece->x) - (BOARDPIECE_WIDTH - TILE_WIDTH)) < BOARDPIECE_TILE_INTERACTION_PRECISION) &&
+				(std::abs((tile->y - boardpiece->y) - (BOARDPIECE_HEIGHT - TILE_HEIGHT)) < BOARDPIECE_TILE_INTERACTION_PRECISION))
 			{
 				boardpiece->DoAction(static_cast<Tile*>(tile));
 			}
@@ -502,8 +502,14 @@ static void drawBoard(void)
 	}
 }
 
-static void BlankPieceInteraction(Tile* tile) {
+static void BoardPieceInteraction_Blank(Tile* tile) {
 	return;
+}
+
+static void BoardPieceInteraction_FlipVelocity(Tile* tile) {
+	int dx = tile->dx;
+	tile->dx = tile->dy;
+	tile->dy = dx;
 }
 
 static void addBoardPieceToRound(Round* round, BoardPiece* piece)
@@ -550,7 +556,7 @@ static void AddDefaultBoardToRound(Round *round) {
 			piece->w = BOARDPIECE_WIDTH;
 			piece->h = BOARDPIECE_HEIGHT;
 			piece->texture = boardPieceTexture;
-			piece->DoAction = BlankPieceInteraction;
+			piece->DoAction = BoardPieceInteraction_Blank;
 			round->pieceTail->next = piece;
 			round->pieceTail = piece;
 		}
@@ -566,6 +572,14 @@ static void initRounds(void)
 		new Tile(0, 1, &blueTile)
 	);
 	AddDefaultBoardToRound(round0);
+	BoardPiece *piece;
+	for (piece = round0->pieceHead.next; piece != NULL; piece = piece->next) {
+		if (((piece->x - BOARD_SCREEN_OFFSET_X) / BOARDPIECE_WIDTH == 2) &&
+			((piece->y - BOARD_SCREEN_OFFSET_Y) / BOARDPIECE_HEIGHT == 1)) {
+			piece->texture = greenTile.texture;
+			piece->DoAction = BoardPieceInteraction_FlipVelocity;
+		}
+	}
 
 	Round *round1 = new Round();
 	addTilesToRound(
