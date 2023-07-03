@@ -9,7 +9,8 @@ static TileType blueTile;
 static TileType redTile;
 static TileType greenTile;
 static TileType greyTile;
-static Tile tileQueueHead, *tileQueueTail=&tileQueueHead;
+static Tile tileQueueHead, *tileQueueTail = &tileQueueHead;
+static BoardPiece pieceQueueHead, *pieceQueueTail=&pieceQueueHead;
 
 #pragma region tiles
 
@@ -343,7 +344,7 @@ static void doRollingEffects()
 				}
 				if (effect == tile->rollingEffectTail)
 				{
-					tile->rollingEffectTail=prev;
+					tile->rollingEffectTail = prev;
 				}
 				prev->next = effect->next;
 				free(effect);
@@ -361,25 +362,37 @@ static void doTiles(void)
 	doRollingEffects();
 }
 
-static void addTilesToRound(Round *round, Tile *tile)
+static void addTilesToRound(Round* round, Tile* tile)
 {
 	round->tileTail->next = tile;
 	round->tileTail = tile;
 }
 
 template<typename First, typename ... Tiles>
-static void addTilesToRound(Round *round, First arg, const Tiles&... rest)
+static void addTilesToRound(Round* round, First arg, const Tiles&... rest)
 {
 	round->tileTail->next = arg;
 	round->tileTail = arg;
 	addTilesToRound(round, rest...);
 }
 
+static void EmptyTiles(void) {
+	Entity* tile;
+
+	while (stage.tileHead.next)
+	{
+		tile = stage.tileHead.next;
+		stage.tileHead.next = stage.tileHead.next->next;
+		free(tile);
+	}
+	stage.tileTail = &stage.tileHead;
+}
+
 static void spawnRoundTiles(void)
 {
-	Tile *tile;
-	for (tile = static_cast<Tile*>(currentRound->tileHead.next); 
-		tile != NULL; 
+	Tile* tile;
+	for (tile = static_cast<Tile*>(currentRound->tileHead.next);
+		tile != NULL;
 		tile = static_cast<Tile*>(tile->next))
 	{
 		queueTileSpawn(tile);
@@ -388,27 +401,27 @@ static void spawnRoundTiles(void)
 
 static void doTileClicks(int xMouse, int yMouse)
 {
-	Tile *tile;
+	Tile* tile;
 
-		for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
+	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
+	{
+		if (!tile->isRealigning
+			&& collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
 		{
-			if (!tile->isRealigning
-				&& collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
-			{
-				tile->tileType->clickInteraction(tile);
-			}
+			tile->tileType->clickInteraction(tile);
 		}
+	}
 }
 
 static void drawTiles(void)
 {
-	Entity *e;
+	Entity* e;
 
-	for (e=stage.tileHead.next; e != NULL; e = e->next){
-		if (!e->h || !e->w){
+	for (e = stage.tileHead.next; e != NULL; e = e->next) {
+		if (!e->h || !e->w) {
 			blitInBoard(e->texture, e->x, e->y);
 		}
-		else{
+		else {
 			blitInBoard(e->texture, e->x, e->y, e->w, e->h);
 		}
 	}
@@ -420,8 +433,8 @@ static void drawTiles(void)
 
 static void spawnBoardPiece(int x, int y)
 {
-	BoardPiece *newPiece = new BoardPiece();
-	
+	BoardPiece* newPiece = new BoardPiece();
+
 	newPiece->x = x;
 	newPiece->y = y;
 	newPiece->w = BOARDPIECE_WIDTH;
@@ -432,16 +445,46 @@ static void spawnBoardPiece(int x, int y)
 	stage.pieceTail = newPiece;
 }
 
-static void initBoard(void)
+static void spawnBoardPiece(BoardPiece *piece)
 {
-	int i, j;
+	BoardPiece* newPiece = new BoardPiece(*piece);
 
-	for (i = 0 ; i<BOARDPIECE_COUNT_X ; i += 1)
-	{
-		for (j = 0 ; j<BOARDPIECE_COUNT_Y ; j += 1)
-		{
-			spawnBoardPiece(BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH, BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT);
+	stage.pieceTail->next = newPiece;
+	stage.pieceTail = newPiece;
+}
+
+static void doBoardPieces() {
+	Entity* tile;
+	BoardPiece* boardpiece;
+
+	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next) {
+		for (boardpiece = stage.pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
+			if ((boardpiece->x - tile->x == BOARDPIECE_WIDTH - TILE_WIDTH) &&
+				(boardpiece->y - tile->y == BOARDPIECE_HEIGHT - TILE_HEIGHT)) 
+			{
+				boardpiece->DoAction(static_cast<Tile*>(tile));
+			}
 		}
+	}
+}
+
+static void EmptyBoardPieces(void) {
+	BoardPiece* boardpiece;
+
+	while (stage.pieceHead.next)
+	{
+		boardpiece = stage.pieceHead.next;
+		stage.pieceHead.next = stage.pieceHead.next->next;
+		free(boardpiece);
+	}
+	stage.pieceTail = &stage.pieceHead;
+}
+
+static void spawnRoundBoardPieces(void) {
+	BoardPiece* boardpiece;
+
+	for (boardpiece = currentRound->pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
+		spawnBoardPiece(boardpiece);
 	}
 }
 
@@ -457,6 +500,24 @@ static void drawBoard(void)
 			blit(b->texture, b->x, b->y, b->w, b->h);
 		}
 	}
+}
+
+static void BlankPieceInteraction(Tile* tile) {
+	return;
+}
+
+static void addBoardPieceToRound(Round* round, BoardPiece* piece)
+{
+	round->pieceTail->next = piece;
+	round->pieceTail = piece;
+}
+
+template<typename First, typename ... Tiles>
+static void addBoardPieceToRound(Round* round, First arg, const Tiles&... rest)
+{
+	round->pieceTail->next = arg;
+	round->pieceTail = arg;
+	addTilesToRound(round, rest...);
 }
 
 #pragma endregion boardPieces
@@ -475,6 +536,27 @@ static void addRoundsToStage(First arg, const Rounds&... rest)
 	addRoundsToStage(rest...);
 }
 
+static void AddDefaultBoardToRound(Round *round) {
+	int i, j;
+	BoardPiece* piece;
+
+	for (i = 0; i < BOARDPIECE_COUNT_X; i += 1)
+	{
+		for (j = 0; j < BOARDPIECE_COUNT_Y; j += 1)
+		{
+			piece = new BoardPiece();
+			piece->x = BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH;
+			piece->y = BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT;
+			piece->w = BOARDPIECE_WIDTH;
+			piece->h = BOARDPIECE_HEIGHT;
+			piece->texture = boardPieceTexture;
+			piece->DoAction = BlankPieceInteraction;
+			round->pieceTail->next = piece;
+			round->pieceTail = piece;
+		}
+	}
+}
+
 static void initRounds(void)
 {
 	Round *round0 = new Round();
@@ -483,6 +565,7 @@ static void initRounds(void)
 		new Tile(1, 1, &blueTile),
 		new Tile(0, 1, &blueTile)
 	);
+	AddDefaultBoardToRound(round0);
 
 	Round *round1 = new Round();
 	addTilesToRound(
@@ -494,6 +577,7 @@ static void initRounds(void)
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile)
 	);
+	AddDefaultBoardToRound(round1);
 
 	Round *round2 = new Round();
 	addTilesToRound(
@@ -506,6 +590,7 @@ static void initRounds(void)
 		new Tile(6, 3, &blueTile),
 		new Tile(7, 3, &redTile)
 	);
+	AddDefaultBoardToRound(round2);
 
 	Round *round3 = new Round();
 	addTilesToRound(
@@ -524,6 +609,7 @@ static void initRounds(void)
 		new Tile(4, 1, &redTile),
 		new Tile(5, 0, &redTile)
 	);
+	AddDefaultBoardToRound(round3);
 
 	Round *round4 = new Round();
 	addTilesToRound(
@@ -551,6 +637,7 @@ static void initRounds(void)
 		new Tile(8, 0, &blueTile)
 
 	);
+	AddDefaultBoardToRound(round4);
 
 	Round *round5 = new Round();
 	addTilesToRound(round5, 
@@ -560,6 +647,7 @@ static void initRounds(void)
 		new Tile(2, 1, &blueTile),
 		new Tile(3, 1, &greenTile),
 		new Tile(4, 1, &greenTile));
+	AddDefaultBoardToRound(round5);
 
 	Round *round6 = new Round();
 	addTilesToRound(round6,
@@ -569,6 +657,7 @@ static void initRounds(void)
 		new Tile(6, 2, &greenTile),
 		new Tile(5, 3, &blueTile),
 		new Tile(6, 3, &blueTile));
+	AddDefaultBoardToRound(round6);
 
 	Round *round7 = new Round();
 	addTilesToRound(round7,
@@ -581,22 +670,17 @@ static void initRounds(void)
 		new Tile(6, 3, &blueTile),
 		new Tile(5, 4, &blueTile),
 		new Tile(6, 4, &greenTile));
+	AddDefaultBoardToRound(round7);
 
 	addRoundsToStage(round0, round1, round2, round3, round4, round5, round6, round7);
 }
 
 static void resetRound()
 {
-	Entity *tile;
+	EmptyBoardPieces();
+	EmptyTiles();
 
-	while(stage.tileHead.next)
-	{
-		tile = stage.tileHead.next;
-		stage.tileHead.next = stage.tileHead.next->next;
-		free(tile);
-	}
-	stage.tileTail = &stage.tileHead;
-
+	spawnRoundBoardPieces();
 	spawnRoundTiles();
 }
 
@@ -682,6 +766,8 @@ static void playerWins(void)
 	{
 		currentRound = currentRound->next;
 		stage.tileTail = &stage.tileHead;
+		EmptyBoardPieces();
+		spawnRoundBoardPieces();
 		spawnRoundTiles();
 	}
 	else
@@ -851,6 +937,8 @@ static void logic(void)
 
 	doTiles();
 
+	doBoardPieces();
+
 	doTileCollisions();
 
 	spawnQueueTiles();
@@ -887,6 +975,5 @@ void initStage(void)
 	initButtons();
 	initColours();
 	initRounds();
-	initBoard();
 	play();
 }

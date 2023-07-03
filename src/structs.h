@@ -16,15 +16,27 @@ struct Entity {
 };
 
 struct BoardPiece;
+struct Tile;
 
 struct BoardPiece {
 	int x, y;
 	int w, h;
 	SDL_Texture *texture;
 	BoardPiece *next;
-};
+	void (*DoAction)(Tile*);
+	BoardPiece() : next(nullptr), texture(nullptr) {
+		x = y = w = h = 0;
+	}
 
-struct Tile;
+	BoardPiece(const BoardPiece& piece) : BoardPiece() {
+		x = piece.x;
+		y = piece.y;
+		w = piece.w;
+		h = piece.h;
+		texture = piece.texture;
+		DoAction = piece.DoAction;
+	}
+};
 
 struct TileType {
 	int team;
@@ -99,9 +111,10 @@ struct Tile : Entity {
 struct Round;
 
 struct Round {
-	Tile tileHead, *tileTail;
+	Tile tileHead, * tileTail;
+	BoardPiece pieceHead, *pieceTail;
 	Round *next;
-	Round() : tileHead(), tileTail(&tileHead){}
+	Round() : tileHead(), tileTail(&tileHead), pieceHead(), pieceTail(&pieceHead){}
 };
 
 struct Button;
