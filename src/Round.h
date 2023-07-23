@@ -1,6 +1,8 @@
+#pragma once
 #include "common.h"
 
-struct Round {
+class Round {
+public:
 	Tile tileHead, * tileTail;
 	BoardPiece pieceHead, * pieceTail;
 	Round* next;

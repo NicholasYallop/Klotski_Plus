@@ -1,14 +1,13 @@
 #pragma once
-#include "SDL.h"
-#include "enums.h"
+#include "common.h"
 
 struct Entity;
-struct BoardPiece;
 struct RollingEffect;
 struct Round;
 struct Button;
-struct Stage;
+class BoardPiece;
 class Tile;
+struct Stage;
 
 struct Entity {
 	int x, y;
@@ -19,26 +18,6 @@ struct Entity {
 	Entity *next;
 	Entity() : next(nullptr){
 		x = y = w = h = dx = dy = team = 0;
-	}
-};
-
-struct BoardPiece {
-	int x, y;
-	int w, h;
-	SDL_Texture *texture;
-	BoardPiece *next;
-	void (*DoAction)(Tile*);
-	BoardPiece() : next(nullptr), texture(nullptr) {
-		x = y = w = h = 0;
-	}
-
-	BoardPiece(const BoardPiece& piece) : BoardPiece() {
-		x = piece.x;
-		y = piece.y;
-		w = piece.w;
-		h = piece.h;
-		texture = piece.texture;
-		DoAction = piece.DoAction;
 	}
 };
 
