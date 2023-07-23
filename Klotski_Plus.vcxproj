@@ -124,7 +124,9 @@
     <ClCompile Include="src\init.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Round.cpp" />
     <ClCompile Include="src\stage.cpp" />
+    <ClCompile Include="src\Tile.cpp" />
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -134,8 +136,10 @@
     <ClInclude Include="src\enums.h" />
     <ClInclude Include="src\init.h" />
     <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\Round.h" />
     <ClInclude Include="src\stage.h" />
     <ClInclude Include="src\structs.h" />
+    <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\utils.h" />
   </ItemGroup>
   <ItemGroup>

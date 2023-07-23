@@ -1,5 +1,13 @@
 #include "common.h"
 
+struct Stage {
+	Tile tileHead, * tileTail;
+	BoardPiece pieceHead, * pieceTail;
+	Round roundHead, * roundTail;
+	Button buttonHead, * buttonTail;
+};
+
+
 extern App app;
 extern bool Quit;
 static Stage stage;

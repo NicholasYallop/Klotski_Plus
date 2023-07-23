@@ -1,3 +1,4 @@
+#pragma once
 enum struct INTERACTION_FLAG : int{
     NONE = 0,
     DESTROY_TILE1 = 1,
