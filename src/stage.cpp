@@ -14,14 +14,14 @@ static BoardPiece pieceQueueHead, *pieceQueueTail=&pieceQueueHead;
 
 #pragma region tiles
 
-static void spawnTile(Tile *tile)
+void Stage::spawnTile(Tile *tile)
 {
 	Tile *deepCopy = new Tile(*tile);
 	stage.tileTail->next = deepCopy;
 	stage.tileTail = deepCopy;
 }
 
-static void spawnTileToGrid(int i, int j, TileType *tileType)
+void Stage::spawnTileToGrid(int i, int j, TileType *tileType)
 {
 	Tile *newTile = new Tile(i, j, tileType);
 
@@ -29,7 +29,7 @@ static void spawnTileToGrid(int i, int j, TileType *tileType)
 	stage.tileTail = newTile;
 }
 
-static void queueTileSpawnToGrid(int i, int j, TileType *tileType)
+void Stage::queueTileSpawnToGrid(int i, int j, TileType* tileType)
 {
 	Tile *newTile = new Tile(i, j, tileType);
 
@@ -37,106 +37,25 @@ static void queueTileSpawnToGrid(int i, int j, TileType *tileType)
 	tileQueueTail = newTile;
 }
 
-static void queueTileSpawn(Tile *tile)
+void Stage::queueTileSpawn(Tile *tile)
 {
 	Tile *deepCopy = new Tile(*tile);
 	tileQueueTail->next = deepCopy;
 	tileQueueTail = deepCopy;
 }
 
-static void spawnQueueTiles()
+void Stage::spawnQueueTiles()
 {
 	Entity *tile;
 
 	while(tileQueueHead.next)
 	{
 		tile = tileQueueHead.next;
-		spawnTile(static_cast<Tile*>(tile));
+		stage.spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
 		free(tile);
 	}
 	tileQueueTail = &tileQueueHead;
-}
-
-static EFFECT_RETURN_FLAG realignLeft(Tile *tile, double& parameter){
-	if (parameter==0)
-	{
-		tile->isRealigning = false;
-		tile->dx = 0;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
-	}
-	tile->isRealigning = true;
-	if (parameter<=RECOIL_SPEED_X)
-	{
-		tile->dx = - int(parameter);
-		parameter = 0;
-		return EFFECT_RETURN_FLAG::NONE;
-	}
-	tile->dx = -RECOIL_SPEED_X;
-	parameter -= RECOIL_SPEED_X;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
-static EFFECT_RETURN_FLAG realignRight(Tile *tile, double& parameter){
-	if (parameter==0)
-	{
-		tile->isRealigning = false;
-		tile->dx = 0;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
-	}
-	tile->isRealigning = true;
-	if (parameter<=RECOIL_SPEED_X)
-	{
-		tile->dx = int(parameter);
-		parameter = 0;
-		return EFFECT_RETURN_FLAG::NONE;
-	}
-	tile->dx = RECOIL_SPEED_X;
-	parameter -= RECOIL_SPEED_X;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
-static EFFECT_RETURN_FLAG realignDown(Tile *tile, double& parameter){
-	if (parameter==0)
-	{
-		tile->isRealigning = false;
-		tile->dy = 0;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
-	}
-	tile->isRealigning = true;
-	if (parameter<=RECOIL_SPEED_Y)
-	{
-		tile->dy = int(parameter);
-		parameter = 0;
-		return EFFECT_RETURN_FLAG::NONE;
-	}
-	tile->dy = RECOIL_SPEED_Y;
-	parameter -= RECOIL_SPEED_Y;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
-static EFFECT_RETURN_FLAG realignUp(Tile *tile, double& parameter){
-	if (parameter==0)
-	{
-		tile->isRealigning = false;
-		tile->dy = 0;
-		return EFFECT_RETURN_FLAG::END_EFFECT;
-	}
-	tile->isRealigning = true;
-	if (parameter<=RECOIL_SPEED_Y)
-	{
-		tile->dy = -int(parameter);
-		parameter = 0;
-		return EFFECT_RETURN_FLAG::NONE;
-	}
-	tile->dy = -RECOIL_SPEED_Y;
-	parameter -= RECOIL_SPEED_Y;
-	return EFFECT_RETURN_FLAG::NONE;
-}
-
-static INTERACTION_FLAG doTileInteraction(Tile *tile1, Tile *tile2)
-{
-	return (tile1->tileType->tileInteraction(tile1, tile2));
 }
 
 static void containingTile(int x, int y , int& i, int& j)
@@ -152,7 +71,7 @@ static void queueTileSpawnFromCollision(Tile *tile1, Tile *tile2, TileType *tile
 
 	int i=0, j=0;
 	containingTile(contactX, contactY, i, j);
-	queueTileSpawnToGrid(i, j, tileType);
+	stage.queueTileSpawnToGrid(i, j, tileType);
 }
 
 static void doTileCollisions()
@@ -166,7 +85,7 @@ static void doTileCollisions()
 		{
 			INTERACTION_FLAG flags;
 
-			flags = doTileInteraction(tile, comparisonTile);
+			flags = RollingEffect::doTileInteraction(tile, comparisonTile);
 			int tileRealignX, tileRealignY;
 			int i, j;
 			containingTile(tile->x + tile->w/2, tile->y + tile->h/2, i, j);
@@ -191,13 +110,13 @@ static void doTileCollisions()
 				{
 					green->x = int(tile->x);
 					green->y = int(tile->y);
-					queueTileSpawn(green);
+					stage.queueTileSpawn(green);
 				}
 				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE2))
 				{
 					green->x = int(comparisonTile->x);
 					green->y = int(comparisonTile->y);
-					queueTileSpawn(green);
+					stage.queueTileSpawn(green);
 				}
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_RED_TILE)){
@@ -205,49 +124,49 @@ static void doTileCollisions()
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(realignRight, tileRealignX - tile->x);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignRight, tileRealignX - tile->x);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(realignLeft, tile->x - tileRealignX);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignLeft, tile->x - tileRealignX);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(realignUp, tile->y - tileRealignY);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignUp, tile->y - tileRealignY);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE1))
 			{
-				RollingEffect *effect = new RollingEffect(realignDown, tileRealignY - tile->y);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignDown, tileRealignY - tile->y);
 				tile->rollingEffectTail->next = effect;
 				tile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_RIGHT_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(realignRight, comparisonTileRealignX - comparisonTile->x);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignRight, comparisonTileRealignX - comparisonTile->x);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_LEFT_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(realignLeft, comparisonTile->x - comparisonTileRealignX);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignLeft, comparisonTile->x - comparisonTileRealignX);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_UP_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(realignUp, comparisonTile->y - comparisonTileRealignY);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignUp, comparisonTile->y - comparisonTileRealignY);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::BOUNCE_DOWN_TILE2))
 			{
-				RollingEffect *effect = new RollingEffect(realignDown, comparisonTileRealignY - comparisonTile->y);
+				RollingEffect *effect = new RollingEffect(RollingEffect::realignDown, comparisonTileRealignY - comparisonTile->y);
 				comparisonTile->rollingEffectTail->next = effect;
 				comparisonTile->rollingEffectTail = effect;
 			}		
@@ -395,7 +314,7 @@ static void spawnRoundTiles(void)
 		tile != NULL;
 		tile = static_cast<Tile*>(tile->next))
 	{
-		queueTileSpawn(tile);
+		stage.queueTileSpawn(tile);
 	}
 }
 
@@ -955,7 +874,7 @@ static void logic(void)
 
 	doTileCollisions();
 
-	spawnQueueTiles();
+	stage.spawnQueueTiles();
 
 	if (stage.tileHead.next == NULL)
 	{

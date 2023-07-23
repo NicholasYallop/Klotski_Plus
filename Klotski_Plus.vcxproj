@@ -125,6 +125,7 @@
     <ClCompile Include="src\init.cpp" />
     <ClCompile Include="src\input.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\RollingEffect.cpp" />
     <ClCompile Include="src\Round.cpp" />
     <ClCompile Include="src\stage.cpp" />
     <ClCompile Include="src\Tile.cpp" />
@@ -138,6 +139,7 @@
     <ClInclude Include="src\enums.h" />
     <ClInclude Include="src\init.h" />
     <ClInclude Include="src\input.h" />
+    <ClInclude Include="src\RollingEffect.h" />
     <ClInclude Include="src\Round.h" />
     <ClInclude Include="src\stage.h" />
     <ClInclude Include="src\structs.h" />

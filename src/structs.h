@@ -28,19 +28,6 @@ struct TileType {
 	void (*clickInteraction)(Tile*);
 };
 
-struct RollingEffect
-{
-	RollingEffect *next;
-	double parameter;
-	EFFECT_RETURN_FLAG (*action)(Tile *tile, double& parameter);
-	RollingEffect() : next(0){}
-	RollingEffect(EFFECT_RETURN_FLAG (action)(Tile*,double&), double parameter) : RollingEffect()
-	{
-		RollingEffect::action = action;
-		RollingEffect::parameter = parameter;
-	}
-};
-
 struct Button : Entity {
 	void (*Click)(void);
 };
