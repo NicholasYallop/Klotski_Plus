@@ -141,7 +141,9 @@
     <ClInclude Include="src\input.h" />
     <ClInclude Include="src\RollingEffect.h" />
     <ClInclude Include="src\Round.h" />
+    <ClInclude Include="src\RoundTemplates.h" />
     <ClInclude Include="src\stage.h" />
+    <ClInclude Include="src\StageTemplates.h" />
     <ClInclude Include="src\structs.h" />
     <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\utils.h" />

@@ -34,7 +34,6 @@ int main(int argc, char* argv[]){
     app = App();
 
 	initSDL();
-
 	initStage();
 
 	then = SDL_GetTicks();

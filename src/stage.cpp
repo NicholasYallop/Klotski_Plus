@@ -4,7 +4,7 @@ extern App app;
 extern bool Quit;
 static Stage stage;
 static Round *currentRound;
-static SDL_Texture *boardPieceTexture;
+SDL_Texture* boardPieceTexture;
 static TileType blueTile;
 static TileType redTile;
 static TileType greenTile;
@@ -17,16 +17,16 @@ static BoardPiece pieceQueueHead, *pieceQueueTail=&pieceQueueHead;
 void Stage::spawnTile(Tile *tile)
 {
 	Tile *deepCopy = new Tile(*tile);
-	stage.tileTail->next = deepCopy;
-	stage.tileTail = deepCopy;
+	tileTail->next = deepCopy;
+	tileTail = deepCopy;
 }
 
 void Stage::spawnTileToGrid(int i, int j, TileType *tileType)
 {
 	Tile *newTile = new Tile(i, j, tileType);
 
-	stage.tileTail->next = newTile;
-	stage.tileTail = newTile;
+	tileTail->next = newTile;
+	tileTail = newTile;
 }
 
 void Stage::queueTileSpawnToGrid(int i, int j, TileType* tileType)
@@ -51,35 +51,29 @@ void Stage::spawnQueueTiles()
 	while(tileQueueHead.next)
 	{
 		tile = tileQueueHead.next;
-		stage.spawnTile(static_cast<Tile*>(tile));
+		spawnTile(static_cast<Tile*>(tile));
 		tileQueueHead.next = tileQueueHead.next->next;
 		free(tile);
 	}
 	tileQueueTail = &tileQueueHead;
 }
 
-static void containingTile(int x, int y , int& i, int& j)
-{
-	i = floor((x-BOARD_SCREEN_OFFSET_X)/BOARDPIECE_WIDTH);
-	j = floor((y-BOARD_SCREEN_OFFSET_Y)/BOARDPIECE_HEIGHT);
-}
-
-static void queueTileSpawnFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
+void Stage::queueTileSpawnFromCollision(Tile *tile1, Tile *tile2, TileType *tileType)
 {
 	int contactX= std::max(tile1->x, tile2->x);
 	int contactY= std::max(tile1->y, tile2->y);
 
 	int i=0, j=0;
-	containingTile(contactX, contactY, i, j);
-	stage.queueTileSpawnToGrid(i, j, tileType);
+	BoardPiece::containingBoardpiece(contactX, contactY, i, j);
+	queueTileSpawnToGrid(i, j, tileType);
 }
 
-static void doTileCollisions()
+void Stage::doTileCollisions()
 {
 	Tile *tile;
 	Tile *comparisonTile;
 
-	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
+	for (tile = static_cast<Tile*>(tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
 		for (comparisonTile = static_cast<Tile*>(tile->next); comparisonTile != NULL; comparisonTile = static_cast<Tile*>(comparisonTile->next))
 		{
@@ -88,11 +82,11 @@ static void doTileCollisions()
 			flags = RollingEffect::doTileInteraction(tile, comparisonTile);
 			int tileRealignX, tileRealignY;
 			int i, j;
-			containingTile(tile->x + tile->w/2, tile->y + tile->h/2, i, j);
+			BoardPiece::containingBoardpiece(tile->x + tile->w/2, tile->y + tile->h/2, i, j);
 			tileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
 			tileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
 			int comparisonTileRealignX, comparisonTileRealignY;
-			containingTile(comparisonTile->x + comparisonTile->w/2, comparisonTile->y + comparisonTile->h/2, i, j);
+			BoardPiece::containingBoardpiece(comparisonTile->x + comparisonTile->w/2, comparisonTile->y + comparisonTile->h/2, i, j);
 			comparisonTileRealignX = BOARD_SCREEN_OFFSET_X + BOARDPIECE_WIDTH*(i+0.5) - 0.5*TILE_WIDTH;
 			comparisonTileRealignY = BOARD_SCREEN_OFFSET_Y + BOARDPIECE_HEIGHT*(j+0.5) - 0.5*TILE_HEIGHT;
 			if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE1)){
@@ -110,13 +104,13 @@ static void doTileCollisions()
 				{
 					green->x = int(tile->x);
 					green->y = int(tile->y);
-					stage.queueTileSpawn(green);
+					queueTileSpawn(green);
 				}
 				if (static_cast<int>(flags & INTERACTION_FLAG::DESTROY_TILE2))
 				{
 					green->x = int(comparisonTile->x);
 					green->y = int(comparisonTile->y);
-					stage.queueTileSpawn(green);
+					queueTileSpawn(green);
 				}
 			}
 			if (static_cast<int>(flags & INTERACTION_FLAG::SPAWN_RED_TILE)){
@@ -173,18 +167,18 @@ static void doTileCollisions()
 		}
 	}
 
-	Tile *prev = &stage.tileHead; 
-	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
+	Tile *prev = &tileHead; 
+	for (tile = static_cast<Tile*>(tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
 	{
 		if (tile->toDestroy)
 		{
-			if (tile == stage.tileTail)
+			if (tile == tileTail)
 			{
-				stage.tileTail = prev;
+				tileTail = prev;
 			}
-			if (tile == stage.tileTail)
+			if (tile == tileTail)
 			{
-				stage.tileTail = static_cast<Tile*>(prev);
+				tileTail = static_cast<Tile*>(prev);
 			}
 
 			prev->next = tile->next;
@@ -198,32 +192,22 @@ static void doTileCollisions()
 	}
 }
 
-static int isOutsideBoard(Entity *entity)
-{
-	return (
-		(entity->x + entity->w) <= BOARD_SCREEN_OFFSET_X 
-		|| (entity->x) >= BOARD_SCREEN_OFFSET_X + (BOARDPIECE_COUNT_X) * BOARDPIECE_WIDTH
-		|| (entity->y + entity->h) <= BOARD_SCREEN_OFFSET_Y 
-		|| (entity->y) >= BOARD_SCREEN_OFFSET_Y + (BOARDPIECE_COUNT_Y) * BOARDPIECE_HEIGHT
-	);
-}
-
-static void destroyOutOfBoundsTiles(void)
+void Stage::destroyOutOfBoundsTiles()
 {
 	Entity *tile;
-	Entity *prev = &stage.tileHead;
+	Entity *prev = &tileHead;
 
-	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next)
+	for (tile = tileHead.next; tile != NULL; tile = tile->next)
 	{
-		if (isOutsideBoard(tile))
+		if (tile->isOutsideBoard())
 		{
-			if (tile == stage.tileHead.next)
+			if (tile == tileHead.next)
 			{
-				stage.tileHead.next = tile->next;
+				tileHead.next = tile->next;
 			}
-			if (tile == stage.tileTail)
+			if (tile == tileTail)
 			{
-				stage.tileTail = static_cast<Tile*>(prev);
+				tileTail = static_cast<Tile*>(prev);
 			}
 			prev->next = tile->next;
 
@@ -241,10 +225,10 @@ static void destroyOutOfBoundsTiles(void)
 	}
 }
 
-static void doRollingEffects()
+void Stage::doRollingEffects()
 {
 	Tile *tile;
-	for(tile=static_cast<Tile*>(stage.tileHead.next)
+	for(tile=static_cast<Tile*>(tileHead.next)
 		; tile!=NULL
 		; tile = static_cast<Tile*>(tile->next))
 	{
@@ -275,49 +259,36 @@ static void doRollingEffects()
 	}
 }
 
-static void doTiles(void)
+void Stage::doTiles()
 {
 	destroyOutOfBoundsTiles();
 	doRollingEffects();
 }
 
-static void addTilesToRound(Round* round, Tile* tile)
-{
-	round->tileTail->next = tile;
-	round->tileTail = tile;
-}
-
-template<typename First, typename ... Tiles>
-static void addTilesToRound(Round* round, First arg, const Tiles&... rest)
-{
-	round->tileTail->next = arg;
-	round->tileTail = arg;
-	addTilesToRound(round, rest...);
-}
-
-static void EmptyTiles(void) {
+void Stage::EmptyTiles() {
 	Entity* tile;
 
-	while (stage.tileHead.next)
+	while (tileHead.next)
 	{
-		tile = stage.tileHead.next;
-		stage.tileHead.next = stage.tileHead.next->next;
+		tile = tileHead.next;
+		tileHead.next = tileHead.next->next;
 		free(tile);
 	}
-	stage.tileTail = &stage.tileHead;
+	tileTail = &tileHead;
 }
 
-static void spawnRoundTiles(void)
+void Stage::spawnRoundTiles()
 {
 	Tile* tile;
 	for (tile = static_cast<Tile*>(currentRound->tileHead.next);
 		tile != NULL;
 		tile = static_cast<Tile*>(tile->next))
 	{
-		stage.queueTileSpawn(tile);
+		queueTileSpawn(tile);
 	}
 }
 
+// this belongs in app
 static void doTileClicks(int xMouse, int yMouse)
 {
 	Tile* tile;
@@ -332,6 +303,7 @@ static void doTileClicks(int xMouse, int yMouse)
 	}
 }
 
+//this belongs in app
 static void drawTiles(void)
 {
 	Entity* e;
@@ -350,7 +322,7 @@ static void drawTiles(void)
 
 #pragma region boardPieces
 
-static void spawnBoardPiece(int x, int y)
+void Stage::spawnBoardPiece(int x, int y)
 {
 	BoardPiece* newPiece = new BoardPiece();
 
@@ -360,24 +332,24 @@ static void spawnBoardPiece(int x, int y)
 	newPiece->h = BOARDPIECE_HEIGHT;
 	newPiece->texture = boardPieceTexture;
 
-	stage.pieceTail->next = newPiece;
-	stage.pieceTail = newPiece;
+	pieceTail->next = newPiece;
+	pieceTail = newPiece;
 }
 
-static void spawnBoardPiece(BoardPiece *piece)
+void Stage::spawnBoardPiece(BoardPiece *piece)
 {
 	BoardPiece* newPiece = new BoardPiece(*piece);
 
-	stage.pieceTail->next = newPiece;
-	stage.pieceTail = newPiece;
+	pieceTail->next = newPiece;
+	pieceTail = newPiece;
 }
 
-static void doBoardPieces() {
+void Stage::doBoardPieces() {
 	Entity* tile;
 	BoardPiece* boardpiece;
 
-	for (tile = stage.tileHead.next; tile != NULL; tile = tile->next) {
-		for (boardpiece = stage.pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
+	for (tile = tileHead.next; tile != NULL; tile = tile->next) {
+		for (boardpiece = pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
 			if ((std::abs((tile->x - boardpiece->x) - (BOARDPIECE_WIDTH - TILE_WIDTH)) < BOARDPIECE_TILE_INTERACTION_PRECISION) &&
 				(std::abs((tile->y - boardpiece->y) - (BOARDPIECE_HEIGHT - TILE_HEIGHT)) < BOARDPIECE_TILE_INTERACTION_PRECISION))
 			{
@@ -387,19 +359,19 @@ static void doBoardPieces() {
 	}
 }
 
-static void EmptyBoardPieces(void) {
+void Stage::EmptyBoardPieces() {
 	BoardPiece* boardpiece;
 
-	while (stage.pieceHead.next)
+	while (pieceHead.next)
 	{
-		boardpiece = stage.pieceHead.next;
-		stage.pieceHead.next = stage.pieceHead.next->next;
+		boardpiece = pieceHead.next;
+		pieceHead.next = pieceHead.next->next;
 		free(boardpiece);
 	}
-	stage.pieceTail = &stage.pieceHead;
+	pieceTail = &pieceHead;
 }
 
-static void spawnRoundBoardPieces(void) {
+void Stage::spawnRoundBoardPieces() {
 	BoardPiece* boardpiece;
 
 	for (boardpiece = currentRound->pieceHead.next; boardpiece != NULL; boardpiece = boardpiece->next) {
@@ -407,11 +379,11 @@ static void spawnRoundBoardPieces(void) {
 	}
 }
 
-static void drawBoard(void)
+void Stage::drawBoard(void)
 {
 	BoardPiece *b;
 
-	for (b=stage.pieceHead.next; b != NULL; b = b->next){
+	for (b=pieceHead.next; b != NULL; b = b->next){
 		if (!b->h || !b->w){
 			blit(b->texture, b->x, b->y);
 		}
@@ -421,88 +393,35 @@ static void drawBoard(void)
 	}
 }
 
-static void BoardPieceInteraction_Blank(Tile* tile) {
-	return;
-}
-
-static void BoardPieceInteraction_FlipVelocity(Tile* tile) {
-	int dx = tile->dx;
-	tile->dx = tile->dy;
-	tile->dy = dx;
-}
-
-static void addBoardPieceToRound(Round* round, BoardPiece* piece)
-{
-	round->pieceTail->next = piece;
-	round->pieceTail = piece;
-}
-
-template<typename First, typename ... Tiles>
-static void addBoardPieceToRound(Round* round, First arg, const Tiles&... rest)
-{
-	round->pieceTail->next = arg;
-	round->pieceTail = arg;
-	addTilesToRound(round, rest...);
-}
-
 #pragma endregion boardPieces
 
 #pragma region Rounds
 
-static void addRoundsToStage()
+void Stage::addRounds(Round* round)
 {
+	roundTail->next = round;
+	roundTail = round;
 }
 
-template<typename First, typename ... Rounds>
-static void addRoundsToStage(First arg, const Rounds&... rest)
-{
-	stage.roundTail->next = arg;
-	stage.roundTail = arg;
-	addRoundsToStage(rest...);
-}
-
-static void AddDefaultBoardToRound(Round *round) {
-	int i, j;
-	BoardPiece* piece;
-
-	for (i = 0; i < BOARDPIECE_COUNT_X; i += 1)
-	{
-		for (j = 0; j < BOARDPIECE_COUNT_Y; j += 1)
-		{
-			piece = new BoardPiece();
-			piece->x = BOARD_SCREEN_OFFSET_X + i * BOARDPIECE_WIDTH;
-			piece->y = BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT;
-			piece->w = BOARDPIECE_WIDTH;
-			piece->h = BOARDPIECE_HEIGHT;
-			piece->texture = boardPieceTexture;
-			piece->DoAction = BoardPieceInteraction_Blank;
-			round->pieceTail->next = piece;
-			round->pieceTail = piece;
-		}
-	}
-}
-
-static void initRounds(void)
+void Stage::initRounds(void)
 {
 	Round *round0 = new Round();
-	addTilesToRound(
-		round0,
+	round0->addTiles(
 		new Tile(1, 1, &blueTile),
 		new Tile(0, 1, &blueTile)
 	);
-	AddDefaultBoardToRound(round0);
+	round0->AddDefaultBoard();
 	BoardPiece *piece;
 	for (piece = round0->pieceHead.next; piece != NULL; piece = piece->next) {
 		if (((piece->x - BOARD_SCREEN_OFFSET_X) / BOARDPIECE_WIDTH == 2) &&
 			((piece->y - BOARD_SCREEN_OFFSET_Y) / BOARDPIECE_HEIGHT == 1)) {
 			piece->texture = greenTile.texture;
-			piece->DoAction = BoardPieceInteraction_FlipVelocity;
+			piece->DoAction = BoardPiece::BoardPieceInteraction_FlipVelocity;
 		}
 	}
 
 	Round *round1 = new Round();
-	addTilesToRound(
-		round1,
+	round1->addTiles(
 		new Tile(0, 0, &blueTile),
 		new Tile(1, 0, &redTile),
 		new Tile(2, 0, &redTile),
@@ -510,11 +429,10 @@ static void initRounds(void)
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile)
 	);
-	AddDefaultBoardToRound(round1);
+	round1->AddDefaultBoard();
 
 	Round *round2 = new Round();
-	addTilesToRound(
-		round2,
+	round2->addTiles(
 		new Tile(7, 1, &redTile),
 		new Tile(5, 2, &blueTile),
 		new Tile(6, 2, &redTile),
@@ -523,11 +441,10 @@ static void initRounds(void)
 		new Tile(6, 3, &blueTile),
 		new Tile(7, 3, &redTile)
 	);
-	AddDefaultBoardToRound(round2);
+	round2->AddDefaultBoard();
 
 	Round *round3 = new Round();
-	addTilesToRound(
-		round3,
+	round3->addTiles(
 		new Tile(0, 0, &blueTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 2, &blueTile),
@@ -542,11 +459,10 @@ static void initRounds(void)
 		new Tile(4, 1, &redTile),
 		new Tile(5, 0, &redTile)
 	);
-	AddDefaultBoardToRound(round3);
+	round3->AddDefaultBoard();
 
 	Round *round4 = new Round();
-	addTilesToRound(
-		round4,
+	round4->addTiles(
 		new Tile(4, 2, &blueTile),
 		new Tile(5, 3, &redTile),
 		new Tile(6, 2, &blueTile),
@@ -570,30 +486,30 @@ static void initRounds(void)
 		new Tile(8, 0, &blueTile)
 
 	);
-	AddDefaultBoardToRound(round4);
+	round4->AddDefaultBoard();
 
 	Round *round5 = new Round();
-	addTilesToRound(round5, 
+	round5->addTiles( 
 		new Tile(0, 0, &redTile),
 		new Tile(0, 1, &blueTile),
 		new Tile(1, 1, &blueTile),
 		new Tile(2, 1, &blueTile),
 		new Tile(3, 1, &greenTile),
 		new Tile(4, 1, &greenTile));
-	AddDefaultBoardToRound(round5);
+	round5->AddDefaultBoard();
 
 	Round *round6 = new Round();
-	addTilesToRound(round6,
+	round6->addTiles(
 		new Tile(5, 1, &redTile),
 		new Tile(6, 1, &redTile),
 		new Tile(5, 2, &blueTile),
 		new Tile(6, 2, &greenTile),
 		new Tile(5, 3, &blueTile),
 		new Tile(6, 3, &blueTile));
-	AddDefaultBoardToRound(round6);
+	round6->AddDefaultBoard();
 
 	Round *round7 = new Round();
-	addTilesToRound(round7,
+	round7->addTiles(
 		new Tile(5, 1, &redTile),
 		new Tile(6, 1, &redTile),
 		new Tile(4, 2, &blueTile),
@@ -603,18 +519,18 @@ static void initRounds(void)
 		new Tile(6, 3, &blueTile),
 		new Tile(5, 4, &blueTile),
 		new Tile(6, 4, &greenTile));
-	AddDefaultBoardToRound(round7);
+	round7->AddDefaultBoard();
 
-	addRoundsToStage(round0, round1, round2, round3, round4, round5, round6, round7);
+	addRounds(round0, round1, round2, round3, round4, round5, round6, round7);
 }
 
 static void resetRound()
 {
-	EmptyBoardPieces();
-	EmptyTiles();
+	stage.EmptyBoardPieces();
+	stage.EmptyTiles();
 
-	spawnRoundBoardPieces();
-	spawnRoundTiles();
+	stage.spawnRoundBoardPieces();
+	stage.spawnRoundTiles();
 }
 
 #pragma endregion Rounds
@@ -699,9 +615,9 @@ static void playerWins(void)
 	{
 		currentRound = currentRound->next;
 		stage.tileTail = &stage.tileHead;
-		EmptyBoardPieces();
-		spawnRoundBoardPieces();
-		spawnRoundTiles();
+		stage.EmptyBoardPieces();
+		stage.spawnRoundBoardPieces();
+		stage.spawnRoundTiles();
 	}
 	else
 	{
@@ -868,11 +784,11 @@ static void logic(void)
 {
 	doClicks();
 
-	doTiles();
+	stage.doTiles();
 
-	doBoardPieces();
+	stage.doBoardPieces();
 
-	doTileCollisions();
+	stage.doTileCollisions();
 
 	stage.spawnQueueTiles();
 
@@ -884,14 +800,14 @@ static void logic(void)
 
 static void draw(void)
 {
-	drawBoard();
+	stage.drawBoard();
 
 	drawButtons();
 
 	drawTiles();
 }
 
-void initStage(void)
+void initStage()
 {
 	boardPieceTexture = loadTexture("gfx/dark_brown.jpg");
 
@@ -907,6 +823,6 @@ void initStage(void)
 
 	initButtons();
 	initColours();
-	initRounds();
+	stage.initRounds();
 	play();
 }

@@ -19,6 +19,14 @@ struct Entity {
 	Entity() : next(nullptr){
 		x = y = w = h = dx = dy = team = 0;
 	}
+	int isOutsideBoard() {
+		return (
+			(x + w) <= BOARD_SCREEN_OFFSET_X
+			|| (x) >= BOARD_SCREEN_OFFSET_X + (BOARDPIECE_COUNT_X)*BOARDPIECE_WIDTH
+			|| (y + h) <= BOARD_SCREEN_OFFSET_Y
+			|| (y) >= BOARD_SCREEN_OFFSET_Y + (BOARDPIECE_COUNT_Y)*BOARDPIECE_HEIGHT
+			);
+	}
 };
 
 struct TileType {
