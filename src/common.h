@@ -9,6 +9,7 @@
 #include "init.h"
 #include "input.h"
 #include "utils.h"
+#include "colours.h"
 #include "RollingEffect.h"
 #include "Tile.h"
 #include "Boardpiece.h"

@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Boardpiece.cpp" />
+    <ClCompile Include="src\Colours.cpp" />
     <ClCompile Include="src\draw.cpp" />
     <ClCompile Include="src\enumcs.cpp" />
     <ClCompile Include="src\init.cpp" />
@@ -133,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Boardpiece.h" />
+    <ClInclude Include="src\Colours.h" />
     <ClInclude Include="src\common.h" />
     <ClInclude Include="src\defs.h" />
     <ClInclude Include="src\draw.h" />

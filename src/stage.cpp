@@ -5,10 +5,10 @@ extern bool Quit;
 static Stage stage;
 static Round *currentRound;
 SDL_Texture* boardPieceTexture;
-static TileType blueTile;
-static TileType redTile;
-static TileType greenTile;
-static TileType greyTile;
+TileType blueTile;
+TileType redTile;
+TileType greenTile;
+TileType greyTile;
 static Tile tileQueueHead, *tileQueueTail = &tileQueueHead;
 static BoardPiece pieceQueueHead, *pieceQueueTail=&pieceQueueHead;
 
@@ -635,152 +635,9 @@ void Stage::playerWins()
 
 #pragma region Colours
 
-static INTERACTION_FLAG GreyInteractions(Tile *callingTile, Tile *interactingTile)
-{
-	return INTERACTION_FLAG::NONE;
-}
-
-static void GreyClick(Tile *callingTile)
-{
-	return;
-}
-
-static INTERACTION_FLAG BlueInteractions(Tile *callingTile, Tile *interactingTile)
-{
-	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-
-	if (interactingTile->tileType->team == blueTile.team)
-	{
-		if (collided)
-		{
-			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-		}
-	}
-	if (interactingTile->tileType->team == redTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
-		}
-	}
-	if (interactingTile->tileType->team == greenTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::SPAWN_GREEN_TILE
-				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
-					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-		}
-	}
-
-	return INTERACTION_FLAG::NONE;
-}
-
-static void BlueClick(Tile *callingTile)
-{
-	callingTile->dx = CLICK_SPEED_X;
-}
-
-static INTERACTION_FLAG RedInteractions(Tile *callingTile, Tile *interactingTile)
-{
-	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-
-	if (interactingTile->tileType->team == redTile.team)
-	{
-		if (collided)
-		{
-			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h, interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-		}
-	}
-	if (interactingTile->tileType->team == blueTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREY_TILE;
-		}
-	}
-	if (interactingTile->tileType->team == greenTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_RED_TILE;
-		}
-	}
-
-	return INTERACTION_FLAG::NONE;
-}
-
-static void RedClick(Tile *callingTile)
-{
-	callingTile->dy = CLICK_SPEED_Y;
-}
-
-static INTERACTION_FLAG GreenInteractions(Tile *callingTile, Tile *interactingTile)
-{
-	int collided = collision(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
-					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-
-	if (interactingTile->tileType->team == greenTile.team)
-	{
-		if (collided)
-		{
-			return bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
-					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-		}
-	}
-	if (interactingTile->tileType->team == blueTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_GREEN_TILE
-				| bounce(callingTile->x, callingTile->y, callingTile->w, callingTile->h,
-					interactingTile->x, interactingTile->y, interactingTile->w, interactingTile->h);
-		}
-	}
-	if (interactingTile->tileType->team == redTile.team)
-	{
-		if (collided)
-		{
-			return INTERACTION_FLAG::DESTROY_TILE1 | INTERACTION_FLAG::DESTROY_TILE2 | INTERACTION_FLAG::SPAWN_RED_TILE;
-		}
-	}
-	return INTERACTION_FLAG::NONE;
-}
-
-static void GreenClick(Tile *callingTile)
-{
-	callingTile->dx = -CLICK_SPEED_X;
-}
-
-static void initColours(void)
-{
-	greyTile = TileType();
-	greyTile.team = 0;
-	greyTile.texture = loadTexture("gfx/grey.png");
-	greyTile.tileInteraction = GreyInteractions;
-	greyTile.clickInteraction = GreyClick;
-
-	blueTile = TileType();
-	blueTile.team = 1;
-	blueTile.texture = loadTexture("gfx/blue.png");
-	blueTile.tileInteraction = BlueInteractions;
-	blueTile.clickInteraction = BlueClick;
-
-	redTile = TileType();
-	redTile.team = 2;
-	redTile.texture = loadTexture("gfx/red.png");
-	redTile.tileInteraction = RedInteractions;
-	redTile.clickInteraction = RedClick;
-
-	greenTile = TileType();
-	greenTile.team = 3;
-	greenTile.texture = loadTexture("gfx/green.jpg");
-	greenTile.tileInteraction = GreenInteractions;
-	greenTile.clickInteraction = GreenClick;
-}
-
 #pragma endregion Colours
 
+// belongs in app
 static void logic(void)
 {
 	doClicks();
@@ -799,6 +656,7 @@ static void logic(void)
 	}
 }
 
+// belongs in app
 static void draw(void)
 {
 	stage.drawBoard();
@@ -808,6 +666,7 @@ static void draw(void)
 	drawTiles();
 }
 
+// mostly just a stage constructor
 void initStage()
 {
 	boardPieceTexture = loadTexture("gfx/dark_brown.jpg");
@@ -816,14 +675,13 @@ void initStage()
 	app.delegate.draw = draw;
 
 	stage = Stage();
-	// don't think we can do linked list initialisation in constructor as stage is static
 	stage.roundTail = &stage.roundHead;
 	stage.tileTail = &stage.tileHead;
 	stage.pieceTail = &stage.pieceHead;
 	stage.buttonTail = &stage.buttonHead;
 
 	stage.initButtons();
-	initColours();
+	Colours::initColours();
 	stage.initRounds();
 	stage.play();
 }
