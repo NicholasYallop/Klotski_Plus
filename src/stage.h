@@ -30,6 +30,11 @@ struct Stage {
 	template<typename First, typename ... Rounds>
 	void addRounds(First arg, const Rounds&... rest);
 	void initRounds();
+	void resetRound();
+	void initButtons();
+	void quit();
+	void play();
+	void playerWins();
 };
 
 void initStage();

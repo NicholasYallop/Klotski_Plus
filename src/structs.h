@@ -37,7 +37,7 @@ struct TileType {
 };
 
 struct Button : Entity {
-	void (*Click)(void);
+	void (Stage::*Click)(void);
 };
 
 typedef struct {

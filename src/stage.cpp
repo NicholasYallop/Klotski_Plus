@@ -524,19 +524,20 @@ void Stage::initRounds(void)
 	addRounds(round0, round1, round2, round3, round4, round5, round6, round7);
 }
 
-static void resetRound()
+void Stage::resetRound()
 {
-	stage.EmptyBoardPieces();
-	stage.EmptyTiles();
+	EmptyBoardPieces();
+	EmptyTiles();
 
-	stage.spawnRoundBoardPieces();
-	stage.spawnRoundTiles();
+	spawnRoundBoardPieces();
+	spawnRoundTiles();
 }
 
 #pragma endregion Rounds
 
 #pragma region Buttons
 
+// belongs in app
 static void doButtonClicks(int xMouse, int yMouse)
 {
 	Entity *button;
@@ -545,11 +546,12 @@ static void doButtonClicks(int xMouse, int yMouse)
 		{
 			if (collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, button->x, button->y, button->w, button->h))
 			{
-				static_cast<Button*>(button)->Click();
+				(&stage->*(static_cast<Button*>(button))->Click)();
 			}
 		}
 }
 
+// belongs in app
 static void drawButtons(void)
 {
 	Entity *button;
@@ -560,9 +562,12 @@ static void drawButtons(void)
 	}
 }
 
-static void quit(void);
+void Stage::quit()
+{
+	Quit = true;
+}
 
-static void initButtons()
+void Stage::initButtons()
 {	
 	Button *quitButton = new Button();
 	quitButton->x = SCREEN_WIDTH - 35;
@@ -570,10 +575,10 @@ static void initButtons()
 	quitButton->w = 15;
 	quitButton->h = 15;
 	quitButton->texture = loadTexture("gfx/red_cross.png");
-	quitButton->Click = quit;
+	quitButton->Click = &Stage::quit;
 
-	stage.buttonTail->next = quitButton;
-	stage.buttonTail = quitButton;
+	buttonTail->next = quitButton;
+	buttonTail = quitButton;
 
 	Button *resetButton = new Button();
 	resetButton->x = 10;
@@ -581,16 +586,17 @@ static void initButtons()
 	resetButton->w = 40;
 	resetButton->h = 40;
 	resetButton->texture = loadTexture("gfx/restart.png");
-	resetButton->Click = resetRound;
+	resetButton->Click = &Stage::resetRound;
 
-	stage.buttonTail->next = resetButton;
-	stage.buttonTail = resetButton;
+	buttonTail->next = resetButton;
+	buttonTail = resetButton;
 }
 
 #pragma endregion Buttons
 
 #pragma region Play
 
+// belongs in app
 static void doClicks()
 {
 	if (app.leftClickActive && !app.leftClickHeld)
@@ -604,30 +610,25 @@ static void doClicks()
 	}
 }
 
-static void play()
+void Stage::play()
 {
-	currentRound = &stage.roundHead;
+	currentRound = &roundHead;
 }
 
-static void playerWins(void)
+void Stage::playerWins()
 {
 	if (currentRound->next != NULL)
 	{
 		currentRound = currentRound->next;
-		stage.tileTail = &stage.tileHead;
-		stage.EmptyBoardPieces();
-		stage.spawnRoundBoardPieces();
-		stage.spawnRoundTiles();
+		tileTail = &tileHead;
+		EmptyBoardPieces();
+		spawnRoundBoardPieces();
+		spawnRoundTiles();
 	}
 	else
 	{
 		Quit=true;
 	}
-}
-
-static void quit()
-{
-	Quit=true;
 }
 
 #pragma endregion Play
@@ -794,7 +795,7 @@ static void logic(void)
 
 	if (stage.tileHead.next == NULL)
 	{
-		playerWins();
+		stage.playerWins();
 	}
 }
 
@@ -821,8 +822,8 @@ void initStage()
 	stage.pieceTail = &stage.pieceHead;
 	stage.buttonTail = &stage.buttonHead;
 
-	initButtons();
+	stage.initButtons();
 	initColours();
 	stage.initRounds();
-	play();
+	stage.play();
 }
