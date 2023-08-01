@@ -51,6 +51,4 @@ public:
 	void playerWins();
 };
 
-void initStage();
-
 #include "StageTemplates.h"

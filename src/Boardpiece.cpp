@@ -1,3 +1,4 @@
+#pragma once
 #include "common.h"
 
 BoardPiece::BoardPiece() : next(nullptr), DoAction(nullptr) {

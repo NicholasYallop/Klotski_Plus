@@ -1,6 +1,6 @@
 #include "common.h"
 
-App app;
+App app = App();
 bool Quit = false;
 
 static void capFrameRate(long *then, float *remainder)
@@ -31,10 +31,8 @@ int main(int argc, char* argv[]){
 	long then;
 	float remainder;
 
-    app = App();
-
 	initSDL();
-	initStage();
+	app.initStage();
 
 	then = SDL_GetTicks();
 
@@ -49,9 +47,9 @@ int main(int argc, char* argv[]){
 
 		doInput();
 
-		app.delegate.logic();
+		app.logic();
 
-		app.delegate.draw();
+		app.draw();
 
 		presentScene();
 

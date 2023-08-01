@@ -1,8 +1,6 @@
 #include "common.h"
 
-extern App app;
 extern bool Quit;
-Stage stage = Stage();
 
 #pragma region externs
 SDL_Texture* DefaultBoardPieceTexture;
@@ -288,36 +286,6 @@ void Stage::spawnRoundTiles()
 	}
 }
 
-// this belongs in app
-static void doTileClicks(int xMouse, int yMouse)
-{
-	Tile* tile;
-
-	for (tile = static_cast<Tile*>(stage.tileHead.next); tile != NULL; tile = static_cast<Tile*>(tile->next))
-	{
-		if (!tile->isRealigning
-			&& collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, tile->x, tile->y, tile->w, tile->h))
-		{
-			tile->tileType->clickInteraction(tile);
-		}
-	}
-}
-
-//this belongs in app
-static void drawTiles(void)
-{
-	Entity* e;
-
-	for (e = stage.tileHead.next; e != NULL; e = e->next) {
-		if (!e->h || !e->w) {
-			blitInBoard(e->texture, e->x, e->y);
-		}
-		else {
-			blitInBoard(e->texture, e->x, e->y, e->w, e->h);
-		}
-	}
-}
-
 #pragma endregion tiles
 
 #pragma region boardPieces
@@ -379,21 +347,6 @@ void Stage::spawnRoundBoardPieces() {
 	}
 }
 
-// belongs in app
-void drawBoard()
-{
-	BoardPiece *b;
-
-	for (b=stage.pieceHead.next; b != NULL; b = b->next){
-		if (!b->h || !b->w){
-			blit(b->texture, b->x, b->y);
-		}
-		else{
-			blit(b->texture, b->x, b->y, b->w, b->h);
-		}
-	}
-}
-
 #pragma endregion boardPieces
 
 #pragma region Rounds
@@ -404,7 +357,7 @@ void Stage::addRounds(Round* round)
 	roundTail = round;
 }
 
-void Stage::initRounds(void)
+void Stage::initRounds()
 {
 	Round *round0 = new Round();
 	round0->addTiles(
@@ -538,31 +491,6 @@ void Stage::resetRound()
 
 #pragma region Buttons
 
-// belongs in app
-static void doButtonClicks(int xMouse, int yMouse)
-{
-	Entity *button;
-
-		for (button = stage.buttonHead.next; button != NULL; button=button->next)
-		{
-			if (collision(xMouse, yMouse, CLICK_HEIGHT, CLICK_WIDTH, button->x, button->y, button->w, button->h))
-			{
-				(&stage->*(static_cast<Button*>(button))->Click)();
-			}
-		}
-}
-
-// belongs in app
-static void drawButtons(void)
-{
-	Entity *button;
-
-	for(button = stage.buttonHead.next; button != NULL; button=button->next)
-	{
-		blit(button->texture, button->x, button->y, button->w, button->h);
-	}
-}
-
 void Stage::quit()
 {
 	Quit = true;
@@ -597,20 +525,6 @@ void Stage::initButtons()
 
 #pragma region Play
 
-// belongs in app
-static void doClicks()
-{
-	if (app.leftClickActive && !app.leftClickHeld)
-	{
-		int x, y;
-		SDL_GetMouseState(&x, &y);
-
-		doTileClicks(x, y);
-
-		doButtonClicks(x, y);
-	}
-}
-
 void Stage::play()
 {
 	currentRound = &roundHead;
@@ -633,49 +547,3 @@ void Stage::playerWins()
 }
 
 #pragma endregion Play
-
-#pragma region Colours
-
-#pragma endregion Colours
-
-// belongs in app
-static void logic(void)
-{
-	doClicks();
-
-	stage.doTiles();
-
-	stage.doBoardPieces();
-
-	stage.doTileCollisions();
-
-	stage.spawnQueueTiles();
-
-	if (stage.tileHead.next == NULL)
-	{
-		stage.playerWins();
-	}
-}
-
-// belongs in app
-static void draw(void)
-{
-	drawBoard();
-
-	drawButtons();
-
-	drawTiles();
-}
-
-// mostly just a stage constructor
-void initStage()
-{
-	app.delegate.logic = logic;
-	app.delegate.draw = draw;
-
-	BoardPiece::initBoardPieces();
-	Colours::initColours();
-	stage.initButtons();
-	stage.initRounds();
-	stage.play();
-}
