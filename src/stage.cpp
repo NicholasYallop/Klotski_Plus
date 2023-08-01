@@ -2,15 +2,15 @@
 
 extern App app;
 extern bool Quit;
-static Stage stage;
-static Round *currentRound;
-SDL_Texture* boardPieceTexture;
+Stage stage = Stage();
+
+#pragma region externs
+SDL_Texture* DefaultBoardPieceTexture;
 TileType blueTile;
 TileType redTile;
 TileType greenTile;
 TileType greyTile;
-static Tile tileQueueHead, *tileQueueTail = &tileQueueHead;
-static BoardPiece pieceQueueHead, *pieceQueueTail=&pieceQueueHead;
+#pragma endregion externs
 
 #pragma region tiles
 
@@ -330,7 +330,7 @@ void Stage::spawnBoardPiece(int x, int y)
 	newPiece->y = y;
 	newPiece->w = BOARDPIECE_WIDTH;
 	newPiece->h = BOARDPIECE_HEIGHT;
-	newPiece->texture = boardPieceTexture;
+	newPiece->texture = DefaultBoardPieceTexture;
 
 	pieceTail->next = newPiece;
 	pieceTail = newPiece;
@@ -379,11 +379,12 @@ void Stage::spawnRoundBoardPieces() {
 	}
 }
 
-void Stage::drawBoard(void)
+// belongs in app
+void drawBoard()
 {
 	BoardPiece *b;
 
-	for (b=pieceHead.next; b != NULL; b = b->next){
+	for (b=stage.pieceHead.next; b != NULL; b = b->next){
 		if (!b->h || !b->w){
 			blit(b->texture, b->x, b->y);
 		}
@@ -659,7 +660,7 @@ static void logic(void)
 // belongs in app
 static void draw(void)
 {
-	stage.drawBoard();
+	drawBoard();
 
 	drawButtons();
 
@@ -669,19 +670,12 @@ static void draw(void)
 // mostly just a stage constructor
 void initStage()
 {
-	boardPieceTexture = loadTexture("gfx/dark_brown.jpg");
-
 	app.delegate.logic = logic;
 	app.delegate.draw = draw;
 
-	stage = Stage();
-	stage.roundTail = &stage.roundHead;
-	stage.tileTail = &stage.tileHead;
-	stage.pieceTail = &stage.pieceHead;
-	stage.buttonTail = &stage.buttonHead;
-
-	stage.initButtons();
+	BoardPiece::initBoardPieces();
 	Colours::initColours();
+	stage.initButtons();
 	stage.initRounds();
 	stage.play();
 }

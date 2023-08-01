@@ -1,7 +1,8 @@
 #include "common.h"
 
-BoardPiece::BoardPiece() : next(nullptr) {
+BoardPiece::BoardPiece() : next(nullptr), DoAction(nullptr) {
 	x = y = w = h = 0;
+	texture = DefaultBoardPieceTexture;
 }
 
 BoardPiece::BoardPiece(const BoardPiece& piece) : BoardPiece() {
@@ -11,6 +12,11 @@ BoardPiece::BoardPiece(const BoardPiece& piece) : BoardPiece() {
 	h = piece.h;
 	texture = piece.texture;
 	DoAction = piece.DoAction;
+}
+
+void BoardPiece::initBoardPieces()
+{
+	DefaultBoardPieceTexture = loadTexture("gfx/dark_brown.jpg");
 }
 
 void BoardPiece::containingBoardpiece(int x, int y, int& i, int& j)

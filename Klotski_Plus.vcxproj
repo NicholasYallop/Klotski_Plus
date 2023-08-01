@@ -119,6 +119,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\App.cpp" />
     <ClCompile Include="src\Boardpiece.cpp" />
     <ClCompile Include="src\Colours.cpp" />
     <ClCompile Include="src\draw.cpp" />
@@ -133,6 +134,7 @@
     <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\App.h" />
     <ClInclude Include="src\Boardpiece.h" />
     <ClInclude Include="src\Colours.h" />
     <ClInclude Include="src\common.h" />

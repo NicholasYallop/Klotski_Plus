@@ -1,13 +1,28 @@
 #pragma once
 #include "common.h"
 
-extern SDL_Texture *boardPieceTexture;
-
-struct Stage {
-	Tile tileHead, * tileTail;
-	BoardPiece pieceHead, * pieceTail;
+class Stage {
+public:
 	Round roundHead, * roundTail;
+	Round* currentRound;
+
+	Tile tileHead, * tileTail;
+	Tile tileQueueHead, * tileQueueTail;
+
+	BoardPiece pieceHead, * pieceTail;
+	BoardPiece pieceQueueHead, * pieceQueueTail;
+
 	Button buttonHead, * buttonTail;
+
+	Stage() :
+		roundHead(), roundTail(&roundHead),
+		currentRound(&roundHead),
+		tileHead(), tileTail(&tileHead),
+		tileQueueHead(), tileQueueTail(&tileQueueHead),
+		pieceHead(), pieceTail(&pieceHead),
+		pieceQueueHead(), pieceQueueTail(&pieceQueueHead),
+		buttonHead(), buttonTail(&buttonHead) {};
+
 	void spawnTile(Tile* tile);
 	void spawnTileToGrid(int i, int j, TileType* tileType);
 	void queueTileSpawnToGrid(int i, int j, TileType* tileType);
@@ -25,7 +40,6 @@ struct Stage {
 	void doBoardPieces();
 	void EmptyBoardPieces();
 	void spawnRoundBoardPieces();
-	void drawBoard();
 	void addRounds(Round* round);
 	template<typename First, typename ... Rounds>
 	void addRounds(First arg, const Rounds&... rest);

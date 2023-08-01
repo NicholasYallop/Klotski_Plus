@@ -27,7 +27,7 @@ void Round::AddDefaultBoard() {
 			piece->y = BOARD_SCREEN_OFFSET_Y + j * BOARDPIECE_HEIGHT;
 			piece->w = BOARDPIECE_WIDTH;
 			piece->h = BOARDPIECE_HEIGHT;
-			piece->texture = boardPieceTexture;
+			piece->texture = DefaultBoardPieceTexture;
 			piece->DoAction = BoardPiece::BoardPieceInteraction_Blank;
 			pieceTail->next = piece;
 			pieceTail = piece;
